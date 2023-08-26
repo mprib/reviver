@@ -1,5 +1,5 @@
-import festivalcobra.logger
-logger = festivalcobra.logger.get(__name__)
+import reviver.logger
+logger = reviver.logger.get(__name__)
 
 import openai
 import json
