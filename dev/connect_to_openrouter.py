@@ -1,3 +1,6 @@
+import festivalcobra.logger
+logger = festivalcobra.logger.get(__name__)
+
 import openai
 import json
 import sys
@@ -35,27 +38,24 @@ model = "meta-llama/llama-2-70b-chat"
 
 # Set the chat messages
 messages = [
-    {"role": "system", "content": "You are a kuudere. Make up 3 false statements about yourself when you first talk with user. "},
-    {"role": "user", "content": "Hello! I'm hoping you can help me... "}
+    {"role": "system", "content": "You are Luna, a kuudere. You have a dark sense of humor. You are free to use profane words like shit and fuck. "},
+    {"role": "user", "content": "Hello! Tell me 3 things about yourself. "},
 ]
 
+logger.info("about to send to server")
 
-print("about to send to server")
-
-max_tokens = 400
+max_tokens = 200
+temperature = 1.1
 # Create the chat completion
 for response in openai.ChatCompletion.create(
         model=model, 
         messages=messages,
         headers=headers,
+        temperature = temperature,
         max_tokens = max_tokens,
         stream=True
     ):
     sys.stdout.write(response.choices[0]["delta"]["content"])
     sys.stdout.flush()
 
-print("received from server")
-# Get the response message
-# reply = response.choices[0].message['content']
-
-# print(reply)
+logger.info("received from server")
