@@ -1,5 +1,6 @@
 import openai
 import json
+import sys
 
 # just something here to have as a reference from https://openrouter.ai/docs
 model_dict = {
@@ -43,15 +44,18 @@ print("about to send to server")
 
 max_tokens = 400
 # Create the chat completion
-response = openai.ChatCompletion.create(
-    model=model, 
-    messages=messages,
-    headers=headers,
-    max_tokens = max_tokens
-)
+for response in openai.ChatCompletion.create(
+        model=model, 
+        messages=messages,
+        headers=headers,
+        max_tokens = max_tokens,
+        stream=True
+    ):
+    sys.stdout.write(response.choices[0]["delta"]["content"])
+    sys.stdout.flush()
 
 print("received from server")
 # Get the response message
-reply = response.choices[0].message['content']
+# reply = response.choices[0].message['content']
 
-print(reply)
+# print(reply)
