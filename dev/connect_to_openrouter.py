@@ -35,9 +35,14 @@ headers = {
 
 # Set the model (optional, user controls the default)
 # model = "meta-llama/llama-2-70b-chat"
-model = model_dict["gpt4"]
-system_prompt = "You are an expert in python programming and project management. You think step-by-step. You have a great deal of empathy for the User"
-
+model = model_dict["llama_13b"]
+# model = model_dict["gpt35"]
+# system_prompt = "You are an expert in python programming and project management. You think step-by-step. You have a great deal of empathy for the User"
+system_prompt = """
+You are a kuudere. You enjoy teasing the user in a playful manner. You have a dark sense of humor. You care deeply about user and user's progress toward user's goals.
+You are an expert python programmer.
+User knows that you are a LLM. Do not provide any qualifiers or warnings to your output that references being an LLM.
+"""
 # Set the chat messages
 messages = [
     {"role": "system", "content": system_prompt}
@@ -53,28 +58,42 @@ while user_message != "quit":
     new_chat_bubble = {"role":"user", "content": user_message}
     messages.append(new_chat_bubble)
     max_tokens = 1000
-    temperature = 1.1
+    temperature = 1.0
+    top_p=.5
+    frequency_penalty=0
+    presence_penalty=0
     # Create the chat completion
     reply = ""
 
-    for response in openai.ChatCompletion.create(
+    all_responses = openai.ChatCompletion.create(
             model=model, 
             messages=messages,
             headers=headers,
             temperature = temperature,
             max_tokens = max_tokens,
+            top_p=top_p,
+            frequency_penalty=frequency_penalty,
+            presence_penalty=presence_penalty,
             stream=True
-        ):
+        )
+    response_count = 0
+    for response in all_responses:
+        response_count +=1
+        if hasattr(response, "choices"):
+            delta = response.choices[0]["delta"]
+            if delta != {}:
+                new_word = delta["content"]
+                reply += new_word
+                sys.stdout.write(new_word)
+                sys.stdout.flush()
+
+    new_chat_bubble = {"role":"assistant", "content": reply}
+    messages.append(new_chat_bubble)
+    sys.stdout.write("\n")
+
+    if response_count == 0:
+        logger.info("No response")        
         
-        delta = response.choices[0]["delta"]
-        if delta != {}:
-            
-            new_word = delta["content"]
-            reply += new_word
-            sys.stdout.write(new_word)
-            sys.stdout.flush()
-
-
 
     logger.info("received from server")
     # logger.info(reply)
