@@ -34,28 +34,47 @@ headers = {
 }
 
 # Set the model (optional, user controls the default)
-model = "meta-llama/llama-2-70b-chat"
+# model = "meta-llama/llama-2-70b-chat"
+model = model_dict["gpt4"]
+system_prompt = "You are an expert in python programming and project management. You think step-by-step. You have a great deal of empathy for the User"
 
 # Set the chat messages
 messages = [
-    {"role": "system", "content": "You are Luna, a kuudere. You have a dark sense of humor. You are free to use profane words like shit and fuck. "},
-    {"role": "user", "content": "Hello! Tell me 3 things about yourself. "},
+    {"role": "system", "content": system_prompt}
 ]
 
 logger.info("about to send to server")
 
-max_tokens = 200
-temperature = 1.1
-# Create the chat completion
-for response in openai.ChatCompletion.create(
-        model=model, 
-        messages=messages,
-        headers=headers,
-        temperature = temperature,
-        max_tokens = max_tokens,
-        stream=True
-    ):
-    sys.stdout.write(response.choices[0]["delta"]["content"])
-    sys.stdout.flush()
+user_message = None
+while user_message != "quit":
 
-logger.info("received from server")
+    user_message = input("User:")
+
+    new_chat_bubble = {"role":"user", "content": user_message}
+    messages.append(new_chat_bubble)
+    max_tokens = 1000
+    temperature = 1.1
+    # Create the chat completion
+    reply = ""
+
+    for response in openai.ChatCompletion.create(
+            model=model, 
+            messages=messages,
+            headers=headers,
+            temperature = temperature,
+            max_tokens = max_tokens,
+            stream=True
+        ):
+        
+        delta = response.choices[0]["delta"]
+        if delta != {}:
+            
+            new_word = delta["content"]
+            reply += new_word
+            sys.stdout.write(new_word)
+            sys.stdout.flush()
+
+
+
+    logger.info("received from server")
+    # logger.info(reply)
