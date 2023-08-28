@@ -1,8 +1,8 @@
 
 import reviver.logger
+logger = reviver.logger.get(__name__)
 from dataclasses import dataclass
 from datetime import datetime
-logger = reviver.logger.get(__name__)
 
 @dataclass(frozen=True, slots=True)
 class Message:
