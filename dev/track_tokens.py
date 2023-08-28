@@ -1,6 +1,8 @@
+#%%
 import requests
 import reviver.logger
 logger = reviver.logger.get(__name__)
+import polars as pl
 
 from keys import OPEN_ROUTER_API_KEY
 import json
@@ -30,3 +32,26 @@ model_data = response.content.decode()
 model_data = json.loads(model_data)
 logger.info(f"Model data: {model_data}")
 
+# %%
+# need to flatten the model description data. Long term considering placing this in a database
+# here model is a single dictionary 
+for model  in model_data["data"]:
+    for key,value in model.copy().items():
+        # merge nested dictionaries  
+        if type(value) == dict:
+            for subkey, subvalue in value.items():
+                model[key + "_" +subkey] = subvalue
+            del model[key]
+# %%
+# combine all items together
+model_overview = None
+for model in model_data["data"]:
+    if model_overview is None:
+        model_overview = pl.DataFrame(model)
+                                      
+    else:
+        model_overview = pl.concat([model_overview, pl.DataFrame(model)])
+        
+
+    
+# %%
