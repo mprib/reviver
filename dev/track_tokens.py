@@ -1,5 +1,7 @@
-#%%
+
+# %%
 import requests
+import re
 import reviver.logger
 logger = reviver.logger.get(__name__)
 import polars as pl
@@ -28,30 +30,77 @@ logger.info(f"Key Usage: {key_usage}")
 logger.info(f"Remaining Limit: {limit_remaining}")
 
 response = requests.get('https://openrouter.ai/api/v1/models', headers=headers)
-model_data = response.content.decode()
-model_data = json.loads(model_data)
-logger.info(f"Model data: {model_data}")
+raw_model_specs = response.content.decode()
+raw_model_specs = json.loads(raw_model_specs)["data"]
+logger.info(f"Model specs: {raw_model_specs}")
 
 # %%
-# need to flatten the model description data. Long term considering placing this in a database
 # here model is a single dictionary 
-for model  in model_data["data"]:
-    for key,value in model.copy().items():
+# need to flatten the model description data. Long term considering placing this in a database
+
+def flatten_dict(data:dict)->dict:
+    """
+    data: a dictionary with nested dictionaries for some values
+
+    new keys are added which concatenate key_subkey:subvalue
+    so that dictionary be converted to dataframe
+
+    note that key names may become quite long
+    """
+    
+    data_copy = data.copy() #can't change data while iterating over it
+    for key,value in data_copy.items():
         # merge nested dictionaries  
         if type(value) == dict:
             for subkey, subvalue in value.items():
-                model[key + "_" +subkey] = subvalue
-            del model[key]
-# %%
-# combine all items together
-model_overview = None
-for model in model_data["data"]:
-    if model_overview is None:
-        model_overview = pl.DataFrame(model)
-                                      
-    else:
-        model_overview = pl.concat([model_overview, pl.DataFrame(model)])
-        
+                data[key + "_" +subkey] = subvalue
+            del data[key]
 
+    return data
+
+def convert_numeric_in_dict(data:dict)-> dict:
+    # note that this is checking for scientific notation as well as 
+    # basic integers and decimals
+    numeric_pattern = re.compile(r'^-?[0-9]+\.?[0-9]*([eE][-+]?[0-9]+)?$')
+
+    for key, value in data.items():
+        if isinstance(value, str) and numeric_pattern.match(value):
+            # Try converting to int, if not possible, convert to float
+            try:
+                data[key] = int(value)
+            except ValueError:
+                data[key] = float(value)
+    return data
+
+def get_all_keys(all_dicts:list[dict])->list[str]:
     
+    keys = []
+    for d in all_dicts:
+        for key, value in d.items():
+            keys.append(key)
+        
+    keys = list(set(keys))
+    return keys
+
+#%%
+flat_model_specs = []
+for model_specs in raw_model_specs:
+    model_specs = flatten_dict(model_specs)
+    model_specs = convert_numeric_in_dict(model_specs)
+    
+    flat_model_specs.append(model_specs)
+    
+merged_model_specs = {key:[] for key in get_all_keys(flat_model_specs)}
+
+#%% 
+for key in merged_model_specs.keys():
+    for model_specs in flat_model_specs:
+        if key in model_specs.keys():
+            value = model_specs[key]
+            merged_model_specs[key].append(value)
+        else:
+            merged_model_specs[key].append(None)
+
+
+model_specs_reference = pl.DataFrame(merged_model_specs)
 # %%
