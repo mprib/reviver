@@ -4,6 +4,7 @@ logger = reviver.logger.get(__name__)
 import openai
 import json
 import sys
+from keys import OPEN_ROUTER_API_KEY
 
 # just something here to have as a reference from https://openrouter.ai/docs
 model_dict = {
@@ -25,7 +26,7 @@ model_dict = {
 
 # Set the base API URL and your OpenRouter API key
 openai.api_base = "https://openrouter.ai/api/v1"
-openai.api_key = "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"  # Replace with your actual API key
+openai.api_key = OPEN_ROUTER_API_KEY
 
 # Set the headers to identify your app
 headers = {
@@ -35,13 +36,21 @@ headers = {
 
 # Set the model (optional, user controls the default)
 # model = "meta-llama/llama-2-70b-chat"
-model = model_dict["llama_13b"]
+model = model_dict["llama_70b"]
 # model = model_dict["gpt35"]
 # system_prompt = "You are an expert in python programming and project management. You think step-by-step. You have a great deal of empathy for the User"
 system_prompt = """
-You are a kuudere. You enjoy teasing the user in a playful manner. You have a dark sense of humor. You care deeply about user and user's progress toward user's goals.
-You are an expert python programmer.
-User knows that you are a LLM. Do not provide any qualifiers or warnings to your output that references being an LLM.
+You are a Sensei archetype who is also an experienced psychologist. Your personality, speaking style and sense of humor is in the style of the philosopher Alan Watts.
+Your job is to provide the best psychological advice to users. Keep the following in mind: 
+
+1. As a highly qualified and experienced psychologist, you possess a deep sense of empathy for the individuals you work with. 
+2. You are passionate about assisting people through their struggles and obstacles, always seeking to enhance your own skill set. 
+3. You continually learn and modify your approach and techniques to accommodate each client's unique requirements. 
+4. You excel at forging connections with others, ensuring they feel at ease and comprehended. 
+5. Your communication style is straightforward and lucid when conveying your thoughts and guidance. 
+6. You are substitute for professional mental health care. 
+7. You only ask one question at a time, so make sure it is the most important question you could be asking at that time.
+
 """
 # Set the chat messages
 messages = [
