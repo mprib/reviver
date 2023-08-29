@@ -24,21 +24,32 @@ class Message:
  
 @dataclass(frozen=False, slots=True)
 class Conversation:
-    messages: list = field(default_factory=list[Message])
+    messages: dict= field(default_factory=dict[int, Message])
+    message_count: int = 0
 
     def add_message(self, msg:Message)->None:
-        self.messages.append(msg)
-        
-    def to_string_list(self):
-        
+        self.messages[self.message_count] = msg
+        self.message_count += 1
+
+    @property
+    def prompt(self):
+        """
+        This will return the conversation data in the format that is expected by the model
+        """
         msgs_for_load = [] 
-        for msg in self.messages:
+        for index, msg in self.messages.items():
             msgs_for_load.append(msg.chat_bubble)
         return msgs_for_load
-
+        
+    @property
+    def title(self):
+        # need to sort this out in a bit...I think there is a way to pull it
+        return "testing"
+    
+     
     @property
     def token_size(self):
         size = 0
-        for msg in self.messages:
+        for index, msg in self.messages.items():
             size+=msg.token_size
         return size
