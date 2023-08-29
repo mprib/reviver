@@ -13,12 +13,12 @@ def test_conversation():
     convo.add_message(msg1)
     convo.add_message(msg2)
 
-    logger.info(f"conversation list is {convo.to_string_list()}")
+    logger.info(f"conversation list is {convo.prompt}")
     target_list = [
         {"role": "user", "content": "This is a test"},
         {"role": "assistant", "content": "I'm just here to help."},
     ]
-    assert convo.to_string_list() == target_list
+    assert convo.prompt == target_list
 
 def test_token_size():
     msg1 = Message(role="user", content="This is a test")
