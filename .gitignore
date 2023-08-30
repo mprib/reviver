@@ -1,4 +1,4 @@
-
+*.wav
 tests/working_delete*
 
 # Byte-compiled / optimized / DLL files
