@@ -23,4 +23,5 @@ if SETTING_PATH.exists():
     USER_SETTINGS = rtoml.load(SETTING_PATH)
 else:
     USER_SETTINGS = {} 
+
 LOG_PATH = Path(APP_DIR, "log.txt")

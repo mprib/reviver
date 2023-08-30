@@ -3,6 +3,7 @@ import reviver.logger
 logger = reviver.logger.get(__name__)
 from dataclasses import dataclass, field
 from datetime import datetime
+from reviver.bot import Bot
 
 @dataclass(frozen=True, slots=True)
 class Message:
@@ -24,6 +25,7 @@ class Message:
  
 @dataclass(frozen=False, slots=True)
 class Conversation:
+    bot: Bot 
     messages: dict= field(default_factory=dict[int, Message])
     message_count: int = 0
 
@@ -32,7 +34,7 @@ class Conversation:
         self.message_count += 1
 
     @property
-    def prompt(self):
+    def messages_prompt(self):
         """
         This will return the conversation data in the format that is expected by the model
         """
