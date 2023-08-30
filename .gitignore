@@ -1,3 +1,4 @@
+/dev/connect_to_openrouter copy.py
 *.wav
 tests/working_delete*
 
