@@ -28,9 +28,18 @@ def test_archiver_save_and_load():
     archiver = Archiver(test_dir)
     archiver.store_conversation(convo)
 
+    loaded_test_bot = archiver.get_bot("test_bot","testing")
+    assert(test_bot==loaded_test_bot)
+
+    loaded_messages = archiver.get_messages_from_toml(loaded_test_bot, "testing")
+    assert(loaded_messages==convo.messages)
+
+    reload_convo = archiver.get_conversation(loaded_test_bot,"testing")
+
+    assert(type(reload_convo)==Conversation)
+    assert(convo == reload_convo)
 
 if __name__ == "__main__":
     
     test_archiver_save_and_load()
 
-# %%
