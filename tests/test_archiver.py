@@ -10,7 +10,7 @@ from reviver import ROOT
 from reviver.bot import Bot
 from reviver.helper import delete_directory_contents
 
-def test_archiver_save_and_load():
+def test_conversation_save_and_load():
     test_bot = Bot(name = "test_bot", model="meta-llama/llama-2-13b-chat")
 
     convo = Conversation(bot=test_bot)
@@ -31,7 +31,7 @@ def test_archiver_save_and_load():
     loaded_test_bot = archiver.get_bot("test_bot","testing")
     assert(test_bot==loaded_test_bot)
 
-    loaded_messages = archiver.get_messages_from_toml(loaded_test_bot, "testing")
+    loaded_messages = archiver.get_messages(loaded_test_bot, "testing")
     assert(loaded_messages==convo.messages)
 
     reload_convo = archiver.get_conversation(loaded_test_bot,"testing")
@@ -41,5 +41,5 @@ def test_archiver_save_and_load():
 
 if __name__ == "__main__":
     
-    test_archiver_save_and_load()
+    test_conversation_save_and_load()
 

@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from reviver.bot import Bot
 
-@dataclass(frozen=True, slots=True)
+@dataclass
 class Message:
     role: str
     content: str
