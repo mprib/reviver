@@ -4,6 +4,7 @@ logger = reviver.logger.get(__name__)
 from dataclasses import dataclass, field
 from datetime import datetime
 from reviver.bot import Bot
+from reviver.user import User
 
 @dataclass
 class Message:
@@ -25,13 +26,16 @@ class Message:
  
 @dataclass(frozen=False, slots=True)
 class Conversation:
+    user:User
     bot: Bot 
     messages: dict= field(default_factory=dict[int, Message])
-    message_count: int = 0
+    
+    @property
+    def message_count(self):
+        return len(self.messages.keys())
 
     def add_message(self, msg:Message)->None:
         self.messages[self.message_count] = msg
-        self.message_count += 1
 
     @property
     def messages_prompt(self):

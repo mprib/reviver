@@ -9,11 +9,25 @@ from pathlib import Path
 from reviver import ROOT
 from reviver.bot import Bot
 from reviver.helper import delete_directory_contents
+from reviver.user import User
+
+
+def test_bot_save_and_load():
+
+    test_bot = Bot(name = "test_bot", model="meta-llama/llama-2-13b-chat")
+
+    test_dir = Path(ROOT, "tests", "working_delete", "test_user")
+    delete_directory_contents(test_dir)
+    
+    archiver = Archiver(test_dir) 
+
+    archiver.save_bot(test_bot)
 
 def test_conversation_save_and_load():
     test_bot = Bot(name = "test_bot", model="meta-llama/llama-2-13b-chat")
+    user = User(name= "test_user")
 
-    convo = Conversation(bot=test_bot)
+    convo = Conversation(user, bot=test_bot)
     
     msg1 = Message(role="user", content="This is a test")
     msg2 = Message(role="assistant", content="I'm just here to help.")
@@ -39,7 +53,22 @@ def test_conversation_save_and_load():
     assert(type(reload_convo)==Conversation)
     assert(convo == reload_convo)
 
+
+def test_user_save_and_load():
+    test_bot = Bot(name = "test_bot", model="meta-llama/llama-2-13b-chat")
+    user = User(name= "test_user")
+    
+    user.add_bot(test_bot) 
+  
+    test_dir = Path(ROOT, "tests", "working_delete", "test_user")
+    delete_directory_contents(test_dir)
+    
+    archiver = Archiver(test_dir) 
+
+    archiver.store_user(user)
+
 if __name__ == "__main__":
     
-    test_conversation_save_and_load()
-
+    # test_conversation_save_and_load()
+    # test_user_save_and_load()
+    test_bot_save_and_load()

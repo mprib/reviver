@@ -3,13 +3,15 @@ import reviver.logger
 logger = reviver.logger.get(__name__)
 from reviver.conversation import Message, Conversation
 from reviver.bot import Bot
+from reviver.user import User
 
 def test_conversation():
     msg1 = Message(role="user", content="This is a test")
     msg2 = Message(role="assistant", content="I'm just here to help.")
-    
+   
+    user = User(name="test_user")
     bot = Bot(name="test_bot", model = "llama_70b")
-    convo = Conversation(bot)
+    convo = Conversation(user, bot)
 
     convo.add_message(msg1)
     convo.add_message(msg2)
@@ -28,8 +30,9 @@ def test_token_size():
     logger.info(f"test message size is {msg1.token_size}")
     assert(msg1.token_size == msg2.token_size)
     
+    user = User(name="test_user")
     bot = Bot(name="test_bot", model = "llama_70b")
-    convo = Conversation(bot)
+    convo = Conversation(user, bot)
     
     convo.add_message(msg1)
     convo.add_message(msg2)
