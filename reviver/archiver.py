@@ -9,8 +9,8 @@ from reviver.bot import Bot
 
 
 class Archiver:
-    def __init__(self, user_profile_dir: Path) -> None:
-        self.profile_dir = user_profile_dir
+    def __init__(self, user_dir: Path) -> None:
+        self.profile_dir = user_dir
 
     def store_conversation(self, convo: Conversation) -> None:
         toml_data = {}
@@ -39,7 +39,7 @@ class Archiver:
 
         return bot
 
-    def get_messages_from_toml(self, bot: Bot, title: str) -> dict[int:Message]:
+    def get_messages(self, bot: Bot, title: str) -> dict[int:Message]:
         target_dir = Path(self.profile_dir, bot.name)
         target_path = Path(target_dir, f"{title}.toml")
 
@@ -59,7 +59,7 @@ class Archiver:
         return messages
 
     def get_conversation(self, bot: Bot, title: str) -> Conversation:
-        messages = self.get_messages_from_toml(bot, title)
+        messages = self.get_messages(bot, title)
         message_count = len(messages.keys())
         convo = Conversation(bot, messages, message_count)
         return convo
