@@ -16,29 +16,30 @@ class Archiver:
     def __init__(self, reviver_data_dir: Path) -> None:
         self.reviver_dir = reviver_data_dir
         self.user_id = 1 # current way I'm thinking about it, but who knows?
-        self.set_db_connection()
         
-    def set_db_connection(self)->sqlite3.Connection:
+    def get_connection(self)->sqlite3.Connection:
         self.reviver_dir.mkdir(parents=True, exist_ok=True)
     
         target_db = Path(self.reviver_dir, "reviver.db")
 
         if target_db.exists():
-            self.conn = sqlite3.connect(target_db)
+            conn = sqlite3.connect(target_db)
             logger.info(f"Successfull connection to database at {target_db}")
         
         else:
             # need to initialize the database
             logger.info("No previously existing database...initializing new db based on schema.sql")
-            self.conn = sqlite3.connect(target_db)
-            cursor = self.conn.cursor()
+            conn = sqlite3.connect(target_db)
+            cursor = conn.cursor()
             cursor.executescript(SCHEMA_SQL)
+
+        return conn
 
 
     def store_bot(self, bot: Bot) -> None:
-        cursor = self.conn.cursor()
+        connection = self.get_connection()
+        cursor = connection.cursor()
         bot_data = asdict(bot)
-        bot_data["user_id"] = self.user_id  # Add user_id to the dictionary
 
         columns = []
         placeholders = {}
@@ -56,11 +57,47 @@ class Archiver:
             
             
         cursor.execute(sql, placeholders)
-        self.conn.commit() 
- 
-    def get_bot(self, bot_id:int)->Bot:
-        pass
+        connection.commit()
+        connection.close()
+
+    def get_bot_list(self):
+        sql = """
+        SELECT bot_id from bots
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        results = cursor.execute(sql).fetchall()
+        conn.close()
+        bot_ids = [result[0] for result in results]
+        
+        return bot_ids
     
+    def get_bot(self, bot_id:int)->Bot:
+        sql = """
+        SELECT * from bots WHERE bot_id = (:bot_id)
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        results = cursor.execute(sql, {"bot_id":bot_id}).fetchall()
+        conn.close()
+        column_names = [description[0] for description in cursor.description]
+        bot_data = {name:value for name, value in zip(column_names,results[0])}
+
+        bot = Bot(bot_id=bot_data["bot_id"],
+                  name = bot_data["name"],
+                  rank=bot_data["rank"],
+                  hidden=bot_data["hidden"],
+                  model=bot_data["model"],
+                  system_prompt=bot_data["system_prompt"],
+                  max_tokens=bot_data["max_tokens"],
+                  temperature=bot_data["temperature"],
+                  top_p=bot_data["top_p"],
+                  frequency_penalty=bot_data["frequency_penalty"],
+                  presence_penalty=bot_data["presence_penalty"]
+                  )
+
+        return bot
     
     def store_user(self, user:User)->None:
         pass
@@ -74,9 +111,3 @@ class Archiver:
     
     def get__conversation(self,convo_id)->Conversation:
         pass
-
-if __name__ == "__main__":
-    test_bot = Bot(name = 'test_bot', model="llama70b")
-    arch = Archiver(Path(ROOT, "tests", "working_delete"))
-
-    arch.store_bot(test_bot)

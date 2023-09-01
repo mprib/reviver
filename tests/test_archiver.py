@@ -50,10 +50,41 @@ def test_archive_init():
 
     logger.info("db should now exist...")
     del archiver
-    assert(db_path.exists())
+    assert(not db_path.exists())
     archiver_new = Archiver(test_dir)
 
+def test_bot_store_retrieve():
+    bot1 = Bot(1,"first bot", model="llama_70b",rank=1)
+    # bot2 = Bot(2,"first bot", model="llama_70b",rank=2)
+
+    test_dir = Path(ROOT, "tests", "working_delete")
+    delete_directory_contents(test_dir)
+    archive = Archiver(test_dir)
+
+    archive.store_bot(bot1)
+
+    bot1_copy = archive.get_bot(1)
+    assert(bot1 == bot1_copy) 
+
+def test_bot_id_list():
+    bot1 = Bot(1,"first bot", model="llama_70b",rank=1)
+    bot2 = Bot(2,"first bot", model="llama_70b",rank=2)
+
+    test_dir = Path(ROOT, "tests", "working_delete")
+    delete_directory_contents(test_dir)
+    archive = Archiver(test_dir)
+
+    archive.store_bot(bot1)
+    archive.store_bot(bot2)
+
+    id_list = archive.get_bot_list()
+    assert(id_list == [1,2]) 
+    
+    
+    
 if __name__ == "__main__":
     
     # test_conversation_save_and_load()
     test_archive_init()
+    test_bot_store_retrieve()
+    test_bot_id_list()
