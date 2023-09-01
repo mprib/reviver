@@ -9,90 +9,49 @@ from reviver.bot import Bot
 from reviver.user import User
 
 import sqlite3
-from reviver import ROOT
+from reviver import ROOT, SCHEMA_SQL
 from pathlib import Path
 
 class Archiver:
-    def __init__(self, reviver_dir: Path) -> None:
-        self.reviver_dir = reviver_dir
+    def __init__(self, reviver_data_dir: Path) -> None:
+        self.reviver_dir = reviver_data_dir
         self.user_id = 1 # current way I'm thinking about it, but who knows?
         self.set_db_connection()
-
-        self.create_tables() # won't do anyything if they already exist
         
     def set_db_connection(self)->sqlite3.Connection:
         self.reviver_dir.mkdir(parents=True, exist_ok=True)
     
         target_db = Path(self.reviver_dir, "reviver.db")
-        try:
+
+        if target_db.exists():
             self.conn = sqlite3.connect(target_db)
             logger.info(f"Successfull connection to database at {target_db}")
-        except:
-            logger.info(f"Unable to create or load db from {str(target_db)}")
-
-
-    def create_tables(self):
-        cursor = self.conn.cursor()
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS user (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            key_path TEXT
-        );
-        """)
-
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS bots (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            model TEXT NOT NULL,
-            system_prompt TEXT NOT NULL,
-            max_tokens INT NOT NULL,
-            temperature FLOAT NOT NULL,
-            top_p FLOAT NOT NULL,
-            frequency_penalty FLOAT NOT NULL,
-            presence_penalty FLOAT NOT NULL,
-            user_id INTEGER NOT NULL,
-            FOREIGN KEY(user_id) REFERENCES users(id)
-        );
-        """)
-
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS conversations (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            bot_id INTEGER,
-            user_id INTEGER,
-            FOREIGN KEY(bot_id) REFERENCES bots(id),
-            FOREIGN KEY(user_id) REFERENCES users(id)
-        );
-        """)
-
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            content TEXT NOT NULL,
-            time TIMESTAMP NOT NULL,
-            role TEXT NOT NULL,
-            conversation_id INTEGER,
-            FOREIGN KEY(conversation_id) REFERENCES conversations(id)
-        );
-        """)
+        
+        else:
+            # need to initialize the database
+            logger.info("No previously existing database...initializing new db based on schema.sql")
+            self.conn = sqlite3.connect(target_db)
+            cursor = self.conn.cursor()
+            cursor.executescript(SCHEMA_SQL)
 
 
     def store_bot(self, bot: Bot) -> None:
         cursor = self.conn.cursor()
         bot_data = asdict(bot)
         bot_data["user_id"] = self.user_id  # Add user_id to the dictionary
+
+        columns = []
         placeholders = {}
         for key, value in bot_data.items():
+            columns.append(key)
             placeholders[key] = value
              
-        sql = """
-            INSERT INTO bots 
-            (name, model, system_prompt, max_tokens, temperature, top_p, frequency_penalty, presence_penalty, user_id) 
+        sql = f"""
+            INSERT OR REPLACE INTO 
+            bots 
+            ({", ".join(columns)})
             VALUES 
-            (:name, :model, :system_prompt, :max_tokens, :temperature, :top_p, :frequency_penalty, :presence_penalty, :user_id)
+            ({", ".join(':' + name for name in columns)})
             """
             
             

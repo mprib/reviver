@@ -39,7 +39,21 @@ def test_conversation_save_and_load():
     assert(type(reload_convo)==Conversation)
     assert(convo == reload_convo)
 
+def test_archive_init():
+    test_dir = Path(ROOT, "tests", "working_delete")
+    delete_directory_contents(test_dir)
+    logger.info("Confirming that db does not exist")
+    db_path = Path(test_dir,"reviver.db")
+    assert(not db_path.exists())
+    logger.info("Init archiver without db...")
+    archiver = Archiver(test_dir)
+
+    logger.info("db should now exist...")
+    del archiver
+    assert(db_path.exists())
+    archiver_new = Archiver(test_dir)
+
 if __name__ == "__main__":
     
-    test_conversation_save_and_load()
-
+    # test_conversation_save_and_load()
+    test_archive_init()
