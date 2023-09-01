@@ -37,10 +37,8 @@ class Archiver:
 
 
     def store_bot(self, bot: Bot) -> None:
-        connection = self.get_connection()
-        cursor = connection.cursor()
-        bot_data = asdict(bot)
 
+        bot_data = asdict(bot)
         columns = []
         placeholders = {}
         for key, value in bot_data.items():
@@ -55,12 +53,17 @@ class Archiver:
             ({", ".join(':' + name for name in columns)})
             """
             
-            
+        connection = self.get_connection()
+        cursor = connection.cursor()
+        logger.info(f"Storing bot data: {placeholders}")
         cursor.execute(sql, placeholders)
         connection.commit()
         connection.close()
 
     def get_bot_list(self):
+        """
+        returns a list of all bot ids stored in the database, including hidden ones
+        """
         sql = """
         SELECT bot_id from bots
         """
@@ -83,27 +86,62 @@ class Archiver:
         conn.close()
         column_names = [description[0] for description in cursor.description]
         bot_data = {name:value for name, value in zip(column_names,results[0])}
-
-        bot = Bot(bot_id=bot_data["bot_id"],
-                  name = bot_data["name"],
-                  rank=bot_data["rank"],
-                  hidden=bot_data["hidden"],
-                  model=bot_data["model"],
-                  system_prompt=bot_data["system_prompt"],
-                  max_tokens=bot_data["max_tokens"],
-                  temperature=bot_data["temperature"],
-                  top_p=bot_data["top_p"],
-                  frequency_penalty=bot_data["frequency_penalty"],
-                  presence_penalty=bot_data["presence_penalty"]
-                  )
+        bot = Bot(**bot_data)
+        # bot = Bot(bot_id=bot_data["bot_id"],
+        #           name = bot_data["name"],
+        #           rank=bot_data["rank"],
+        #           hidden=bot_data["hidden"],
+        #           model=bot_data["model"],
+        #           system_prompt=bot_data["system_prompt"],
+        #           max_tokens=bot_data["max_tokens"],
+        #           temperature=bot_data["temperature"],
+        #           top_p=bot_data["top_p"],
+        #           frequency_penalty=bot_data["frequency_penalty"],
+        #           presence_penalty=bot_data["presence_penalty"]
+        #           )
 
         return bot
     
     def store_user(self, user:User)->None:
+        user_data = asdict(user)
+        columns = []
+        placeholders = {}
+        for key, value in user_data.items():
+            columns.append(key)
+            placeholders[key] = value
+             
+        sql = f"""
+            INSERT OR REPLACE INTO 
+            user
+            ({", ".join(columns)})
+            VALUES 
+            ({", ".join(':' + name for name in columns)})
+            """
+            
+        connection = self.get_connection()
+        cursor = connection.cursor()
+        logger.info(f"Storing user data: {placeholders}")
+        cursor.execute(sql, placeholders)
+        connection.commit()
+        connection.close()
         pass
     
     def get_user(self)->User:
-        pass
+        """
+        Current data schema only has one user....
+        """
+        sql = """
+        SELECT * from user
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        results = cursor.execute(sql).fetchall()
+        conn.close()
+        column_names = [description[0] for description in cursor.description]
+        user_data = {name:value for name, value in zip(column_names,results[0])}
+        user = User(**user_data)
+        return user
     
     
     def store_conversation(self, convo:Conversation)->None:

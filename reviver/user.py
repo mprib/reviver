@@ -13,15 +13,7 @@ from reviver.bot import Bot
 @dataclass
 class User:
     name:str
-    bots: dict=field(default_factory=dict[int,Bot]) # bots stored in order of preference
-    
-    @property
-    def bot_count(self):
-        return len(self.bots.keys())
-    
-    def add_bot(self, bot:Bot):
-        self.bots[self.bot_count+1] = Bot
-        
+    key_location:str 
     
         
     

@@ -9,6 +9,7 @@ from pathlib import Path
 from reviver import ROOT
 from reviver.bot import Bot
 from reviver.helper import delete_directory_contents
+from reviver.user import User
 
 def test_conversation_save_and_load():
     test_bot = Bot(name = "test_bot", model="meta-llama/llama-2-13b-chat")
@@ -80,11 +81,22 @@ def test_bot_id_list():
     id_list = archive.get_bot_list()
     assert(id_list == [1,2]) 
     
-    
-    
+def test_user_store_retrieve():
+    user = User(name= "UserName", key_location="")
+     
+    test_dir = Path(ROOT, "tests", "working_delete")
+    delete_directory_contents(test_dir)
+    db_path = Path(test_dir,"reviver.db")
+    assert(not db_path.exists())
+    archive = Archiver(test_dir)
+    archive.store_user(user)
+    user_copy = archive.get_user()
+    assert(user == user_copy)
+     
 if __name__ == "__main__":
     
     # test_conversation_save_and_load()
     test_archive_init()
     test_bot_store_retrieve()
     test_bot_id_list()
+    test_user_store_retrieve()
