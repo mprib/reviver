@@ -3,6 +3,7 @@
 import reviver.logger
 
 logger = reviver.logger.get(__name__)
+import datetime
 from reviver.conversation import Message, Conversation
 from reviver.archiver import Archiver
 from pathlib import Path
@@ -92,6 +93,24 @@ def test_user_store_retrieve():
     archive.store_user(user)
     user_copy = archive.get_user()
     assert(user == user_copy)
+    
+    
+def test_message_store_retrieve():
+    msg = Message(conversation_id=1,position=1, role="user",content= "hello world!")
+
+    test_dir = Path(ROOT, "tests", "working_delete")
+    delete_directory_contents(test_dir)
+    db_path = Path(test_dir,"reviver.db")
+    assert(not db_path.exists())
+
+    archive = Archiver(test_dir)
+    archive.store_message(msg)
+    msg_copy = archive.get_message(1,1)
+    assert(msg == msg_copy)
+    
+    
+    
+    
      
 if __name__ == "__main__":
     
@@ -100,3 +119,4 @@ if __name__ == "__main__":
     test_bot_store_retrieve()
     test_bot_id_list()
     test_user_store_retrieve()
+    test_message_store_retrieve()

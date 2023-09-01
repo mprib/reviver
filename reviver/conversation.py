@@ -8,10 +8,11 @@ from reviver.user import User
 
 @dataclass
 class Message:
-    order: int
+    conversation_id:int
+    position:int
     role: str
     content: str
-    time: datetime = datetime.now()
+    time: str = str(datetime.now())
 
     @property
     def token_size(self):
@@ -24,10 +25,13 @@ class Message:
     @property
     def chat_bubble(self):
        return {"role":self.role, "content":self.content} 
+
+
+
  
 @dataclass(frozen=False, slots=True)
 class Conversation:
-    convo_id: int
+    _id: int
     bot: Bot 
     user: User
     messages: dict= field(default_factory=dict[int, Message])
@@ -42,6 +46,7 @@ class Conversation:
         """
         This will return the conversation data in the format that is expected by the model
         """
+
         msgs_for_load = [] 
         for index, msg in self.messages.items():
             msgs_for_load.append(msg.chat_bubble)

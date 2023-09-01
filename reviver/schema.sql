@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS bots (
 );
 
 CREATE TABLE IF NOT EXISTS conversations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     bot_id INTEGER,
     user_id INTEGER,
@@ -29,12 +29,14 @@ CREATE TABLE IF NOT EXISTS conversations (
 );
 
 CREATE TABLE IF NOT EXISTS messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    conversation_id INTEGER,
+    position INTEGER,
+    role TEXT NOT NULL,
     content TEXT NOT NULL,
     time TIMESTAMP NOT NULL,
-    role TEXT NOT NULL,
-    conversation_id INTEGER,
-    FOREIGN KEY(conversation_id) REFERENCES conversations(id)
+    PRIMARY KEY (conversation_id, position),
+    FOREIGN KEY(conversation_id) REFERENCES conversations(_id)
+    
 );
 
 COMMIT;
