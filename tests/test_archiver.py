@@ -109,6 +109,24 @@ def test_message_store_retrieve():
     assert(msg == msg_copy)
     
     
+def test_messages_store_retrieve():
+    msg1 = Message(conversation_id=1,position=1, role="user",content= "hello world!")
+    msg2 = Message(conversation_id=1,position=2, role="assistant",content= "sup?")
+
+    messages = {msg1.position:msg1, msg2.position:msg2}
+
+
+    test_dir = Path(ROOT, "tests", "working_delete")
+    delete_directory_contents(test_dir)
+    db_path = Path(test_dir,"reviver.db")
+    assert(not db_path.exists())
+
+    archive = Archiver(test_dir)
+    archive.store_messages(messages)
+    messages_copy = archive.get_messages(conversation_id=1)
+
+    assert(messages[1] == messages_copy[1])
+    assert(messages[2] == messages_copy[2])
     
     
      
@@ -120,3 +138,4 @@ if __name__ == "__main__":
     test_bot_id_list()
     test_user_store_retrieve()
     test_message_store_retrieve()
+    test_messages_store_retrieve()

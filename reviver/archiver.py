@@ -69,9 +69,9 @@ class Archiver:
         """
         conn = self.get_connection()
         cursor = conn.cursor()
-        results = cursor.execute(sql).fetchall()
+        rows = cursor.execute(sql).fetchall()
         conn.close()
-        bot_ids = [result[0] for result in results]
+        bot_ids = [row[0] for row in rows]
         
         return bot_ids
     
@@ -123,16 +123,35 @@ class Archiver:
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        results = cursor.execute(sql).fetchall()
-        conn.close()
+        rows = cursor.execute(sql).fetchall()
         column_names = [description[0] for description in cursor.description]
-        user_data = {name:value for name, value in zip(column_names,results[0])}
+        user_data = {name:value for name, value in zip(column_names,rows[0])}
         user = User(**user_data)
+        conn.close()
         return user
 
     def store_messages(self, messages:dict[int, Message])->None:
-        pass
-    
+        for position, msg in messages.items():
+            self.store_message(msg)
+            
+    def get_messages(self, conversation_id:int)-> dict[int,Message]:
+        
+        # need to get all message positions first
+        sql = """
+        SELECT position FROM messages WHERE conversation_id = :conversation_id
+        """
+        connection = self.get_connection()
+        cursor = connection.cursor()
+        rows = cursor.execute(sql, {"conversation_id":conversation_id}).fetchall()
+
+        msg_positions = [position[0] for position in rows]
+        
+        logger.info(f"Message positions are:{msg_positions}")
+
+        messages = {position:self.get_message(conversation_id, position) for position in msg_positions}
+        
+        return messages
+        
     def store_message(self,message:Message)->None:
         message_data = asdict(message)
         columns = []
@@ -163,10 +182,10 @@ class Archiver:
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        results = cursor.execute(sql, (conversation_id, position)).fetchall()
-        conn.close()
+        rows = cursor.execute(sql, (conversation_id, position)).fetchall()
         column_names = [description[0] for description in cursor.description]
-        msg_data = {name:value for name, value in zip(column_names,results[0])}
+        msg_data = {name:value for name, value in zip(column_names,rows[0])}
+        conn.close()
         msg = Message(**msg_data)
         return msg
     
