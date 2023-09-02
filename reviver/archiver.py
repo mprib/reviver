@@ -258,5 +258,5 @@ class Archive:
         bot_id = convo_data["bot_id"]
 
         bot = bot_gallery.get_bot(bot_id)
-        convo = Conversation(convo_id, title, bot,messages)    
+        convo = Conversation(_id = convo_id, bot=bot, title=title, messages=messages)    
         return convo

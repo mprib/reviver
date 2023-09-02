@@ -13,7 +13,7 @@ from reviver.bot import Bot
 @dataclass
 class User:
     name:str
-    key_location:str 
+    key_location:str = None # on initial load, no key location yet
     
         
     

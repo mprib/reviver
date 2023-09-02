@@ -104,7 +104,7 @@ def test_convo_store_retrieve():
     bot_gallery.add_bot(bot_2)
     
     user = User("TestUser", "C:/keys.toml")
-    convo = Conversation(1, "first convo", bot_1)
+    convo = Conversation(1,bot=bot_1)
 
     convo.add_message(msg1)
     convo.add_message(msg2)

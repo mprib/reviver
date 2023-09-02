@@ -32,8 +32,8 @@ class Message:
 @dataclass(frozen=False, slots=True)
 class Conversation:
     _id: int
-    title: str
     bot: Bot 
+    title: str = "untitled"
     messages: dict= field(default_factory=dict[int, Message])
 
     def add_message(self, msg:Message)->None:
