@@ -12,7 +12,6 @@ from reviver.bot import Bot, BotGallery
 from reviver.helper import delete_directory_contents
 from reviver.user import User
 
-
 def test_archive_init():
     test_dir = Path(ROOT, "tests", "working_delete")
     delete_directory_contents(test_dir)
@@ -133,3 +132,4 @@ if __name__ == "__main__":
     test_message_store_retrieve()
     test_messages_store_retrieve()
     test_convo_store_retrieve()
+

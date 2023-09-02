@@ -32,6 +32,7 @@ class Message:
 @dataclass(frozen=False, slots=True)
 class Conversation:
     _id: int
+
     bot: Bot 
     title: str = "untitled"
     messages: dict= field(default_factory=dict[int, Message])
@@ -43,6 +44,7 @@ class Conversation:
     def message_count(self):
         count = len(self.messages.keys())
         return count
+
 
     @property
     def messages_prompt(self):

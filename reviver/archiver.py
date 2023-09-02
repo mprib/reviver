@@ -5,6 +5,7 @@ from dataclasses import dataclass, asdict
 logger = reviver.logger.get(__name__)
 from pathlib import Path
 from reviver.conversation import Conversation, Message
+
 from reviver.bot import Bot, BotGallery
 from reviver.user import User
 
@@ -32,12 +33,11 @@ class Archive:
             conn = sqlite3.connect(target_db)
             cursor = conn.cursor()
             cursor.executescript(SCHEMA_SQL)
-
+            
         return conn
 
 
     def store_bot(self, bot: Bot) -> None:
-
         bot_data = asdict(bot)
         columns = []
         bindings = {}
@@ -129,6 +129,7 @@ class Archive:
         user = User(**user_data)
         conn.close()
         return user
+
 
             
     def get_messages(self, conversation_id:int)-> dict[int,Message]:
