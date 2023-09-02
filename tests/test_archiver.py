@@ -3,72 +3,133 @@
 import reviver.logger
 
 logger = reviver.logger.get(__name__)
+import datetime
 from reviver.conversation import Message, Conversation
-from reviver.archiver import Archiver
+from reviver.archiver import Archive
 from pathlib import Path
 from reviver import ROOT
-from reviver.bot import Bot
+from reviver.bot import Bot, BotGallery
 from reviver.helper import delete_directory_contents
 from reviver.user import User
 
-
-def test_bot_save_and_load():
-
-    test_bot = Bot(name = "test_bot", model="meta-llama/llama-2-13b-chat")
-
-    test_dir = Path(ROOT, "tests", "working_delete", "test_user")
+def test_archive_init():
+    test_dir = Path(ROOT, "tests", "working_delete")
     delete_directory_contents(test_dir)
+    logger.info("Confirming that db does not exist")
+    db_path = Path(test_dir,"reviver.db")
+    assert(not db_path.exists())
+    logger.info("Init archiver without db...")
+    archiver = Archive(test_dir)
+
+    logger.info("db should now exist...")
+    del archiver
+    assert(not db_path.exists())
+    archiver_new = Archive(test_dir)
+
+def test_bot_store_retrieve():
+    bot1 = Bot(1,"first bot", model="llama_70b",rank=1)
+    # bot2 = Bot(2,"first bot", model="llama_70b",rank=2)
+
+    test_dir = Path(ROOT, "tests", "working_delete")
+    delete_directory_contents(test_dir)
+    archive = Archive(test_dir)
+
+    archive.store_bot(bot1)
+
+    bot1_copy = archive.get_bot(1)
+    assert(bot1 == bot1_copy) 
+
+def test_bot_id_list():
+    bot1 = Bot(1,"first bot", model="llama_70b",rank=1)
+    bot2 = Bot(2,"first bot", model="llama_70b",rank=2)
+
+    test_dir = Path(ROOT, "tests", "working_delete")
+    delete_directory_contents(test_dir)
+    archive = Archive(test_dir)
+
+    archive.store_bot(bot1)
+    archive.store_bot(bot2)
+
+    id_list = archive.get_bot_list()
+    assert(id_list == [1,2]) 
     
-    archiver = Archiver(test_dir) 
-
-    archiver.save_bot(test_bot)
-
-def test_conversation_save_and_load():
-    test_bot = Bot(name = "test_bot", model="meta-llama/llama-2-13b-chat")
-    user = User(name= "test_user")
-
-    convo = Conversation(user, bot=test_bot)
+def test_user_store_retrieve():
+    user = User(name= "UserName", key_location="")
+     
+    test_dir = Path(ROOT, "tests", "working_delete")
+    delete_directory_contents(test_dir)
+    db_path = Path(test_dir,"reviver.db")
+    assert(not db_path.exists())
+    archive = Archive(test_dir)
+    archive.store_user(user)
+    user_copy = archive.get_user()
+    assert(user == user_copy)
     
-    msg1 = Message(role="user", content="This is a test")
-    msg2 = Message(role="assistant", content="I'm just here to help.")
+    
+def test_message_store_retrieve():
+    msg = Message(conversation_id=1,position=1, role="user",content= "hello world!")
 
+    archive = get_new_test_archiver()
+    archive.store_message(msg)
+    msg_copy = archive.get_message(1,1)
+    assert(msg == msg_copy)
+    
+    
+def test_messages_store_retrieve():
+    msg1 = Message(conversation_id=1,position=1, role="user",content= "hello world!")
+    msg2 = Message(conversation_id=1,position=2, role="assistant",content= "sup?")
+
+    messages = {msg1.position:msg1, msg2.position:msg2}
+
+    archive = get_new_test_archiver()
+    # archive.store_messages(messages)
+    for position, msg in messages.items():
+        archive.store_message(msg)
+    messages_copy = archive.get_messages(conversation_id=1)
+
+    assert(messages[1] == messages_copy[1])
+    assert(messages[2] == messages_copy[2])
+
+def test_convo_store_retrieve():
+    
+    msg1 = Message(conversation_id=1,position=1, role="user",content= "hello world!")
+    msg2 = Message(conversation_id=1,position=2, role="assistant",content= "sup?")
+
+    bot_1 = Bot(1,"test_bot", model="llama_70b", rank=1)
+    bot_2 = Bot(2,"test_bot", model="llama_70b", rank=2)
+
+    bot_gallery = BotGallery()
+    bot_gallery.add_bot(bot_1)
+    bot_gallery.add_bot(bot_2)
+    
+    user = User("TestUser", "C:/keys.toml")
+    convo = Conversation(1,bot=bot_1)
 
     convo.add_message(msg1)
     convo.add_message(msg2)
-    
+
+    archive = get_new_test_archiver()
+    archive.store_conversation(convo)
+    convo_copy = archive.get_conversation(convo_id=1, bot_gallery=bot_gallery) 
+    logger.info("Confirm that saved and reloaded convo is same as original")
+    assert(convo==convo_copy)
+
+def get_new_test_archiver()->Archive:
     test_dir = Path(ROOT, "tests", "working_delete")
     delete_directory_contents(test_dir)
-
-    archiver = Archiver(test_dir)
-    archiver.store_conversation(convo)
-
-    loaded_test_bot = archiver.get_bot("test_bot","testing")
-    assert(test_bot==loaded_test_bot)
-
-    loaded_messages = archiver.get_messages(loaded_test_bot, "testing")
-    assert(loaded_messages==convo.messages)
-
-    reload_convo = archiver.get_conversation(loaded_test_bot,"testing")
-
-    assert(type(reload_convo)==Conversation)
-    assert(convo == reload_convo)
-
-
-def test_user_save_and_load():
-    test_bot = Bot(name = "test_bot", model="meta-llama/llama-2-13b-chat")
-    user = User(name= "test_user")
+    db_path = Path(test_dir,"reviver.db")
+    assert(not db_path.exists())
+    archive = Archive(test_dir)
+    return archive
     
-    user.add_bot(test_bot) 
-  
-    test_dir = Path(ROOT, "tests", "working_delete", "test_user")
-    delete_directory_contents(test_dir)
-    
-    archiver = Archiver(test_dir) 
-
-    archiver.store_user(user)
-
+     
 if __name__ == "__main__":
     
-    # test_conversation_save_and_load()
-    # test_user_save_and_load()
-    test_bot_save_and_load()
+    test_archive_init()
+    test_bot_store_retrieve()
+    test_bot_id_list()
+    test_user_store_retrieve()
+    test_message_store_retrieve()
+    test_messages_store_retrieve()
+    test_convo_store_retrieve()
+

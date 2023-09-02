@@ -8,9 +8,11 @@ from reviver.user import User
 
 @dataclass
 class Message:
+    conversation_id:int
+    position:int
     role: str
     content: str
-    time: datetime = datetime.now()
+    time: str = str(datetime.now())
 
     @property
     def token_size(self):
@@ -23,36 +25,39 @@ class Message:
     @property
     def chat_bubble(self):
        return {"role":self.role, "content":self.content} 
+
+
+
  
 @dataclass(frozen=False, slots=True)
 class Conversation:
-    user:User
+    _id: int
+
     bot: Bot 
+    title: str = "untitled"
     messages: dict= field(default_factory=dict[int, Message])
-    
-    @property
-    def message_count(self):
-        return len(self.messages.keys())
 
     def add_message(self, msg:Message)->None:
-        self.messages[self.message_count] = msg
+        self.messages[self.message_count+1] = msg
+
+    @property
+    def message_count(self):
+        count = len(self.messages.keys())
+        return count
+
 
     @property
     def messages_prompt(self):
         """
         This will return the conversation data in the format that is expected by the model
         """
+
         msgs_for_load = [] 
         for index, msg in self.messages.items():
             msgs_for_load.append(msg.chat_bubble)
         return msgs_for_load
         
-    @property
-    def title(self):
-        # need to sort this out in a bit...I think there is a way to pull it
-        return "testing"
-    
-     
+
     @property
     def token_size(self):
         size = 0
