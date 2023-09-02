@@ -5,7 +5,7 @@ import reviver.logger
 
 logger = reviver.logger.get(__name__)
 from reviver.conversation import Message, Conversation
-from reviver.archiver import Archiver
+from reviver.archiver import Archive
 from pathlib import Path
 from reviver import ROOT
 from reviver.bot import Bot

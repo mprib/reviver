@@ -32,14 +32,17 @@ class Message:
 @dataclass(frozen=False, slots=True)
 class Conversation:
     _id: int
+    title: str
     bot: Bot 
-    user: User
     messages: dict= field(default_factory=dict[int, Message])
-    message_count: int = 0
 
     def add_message(self, msg:Message)->None:
-        self.messages[self.message_count] = msg
-        self.message_count += 1
+        self.messages[self.message_count+1] = msg
+
+    @property
+    def message_count(self):
+        count = len(self.messages.keys())
+        return count
 
     @property
     def messages_prompt(self):
@@ -52,12 +55,7 @@ class Conversation:
             msgs_for_load.append(msg.chat_bubble)
         return msgs_for_load
         
-    @property
-    def title(self):
-        # need to sort this out in a bit...I think there is a way to pull it
-        return "testing"
-    
-     
+
     @property
     def token_size(self):
         size = 0

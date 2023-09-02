@@ -5,14 +5,14 @@ from dataclasses import dataclass, asdict
 logger = reviver.logger.get(__name__)
 from pathlib import Path
 from reviver.conversation import Conversation, Message
-from reviver.bot import Bot
+from reviver.bot import Bot, BotGallery
 from reviver.user import User
 
 import sqlite3
 from reviver import ROOT, SCHEMA_SQL
 from pathlib import Path
 
-class Archiver:
+class Archive:
     def __init__(self, reviver_data_dir: Path) -> None:
         self.reviver_dir = reviver_data_dir
         self.user_id = 1 # current way I'm thinking about it, but who knows?
@@ -40,10 +40,10 @@ class Archiver:
 
         bot_data = asdict(bot)
         columns = []
-        placeholders = {}
+        bindings = {}
         for key, value in bot_data.items():
             columns.append(key)
-            placeholders[key] = value
+            bindings[key] = value
              
         sql = f"""
             INSERT OR REPLACE INTO 
@@ -55,8 +55,8 @@ class Archiver:
             
         connection = self.get_connection()
         cursor = connection.cursor()
-        logger.info(f"Storing bot data: {placeholders}")
-        cursor.execute(sql, placeholders)
+        logger.info(f"Storing bot data: {bindings}")
+        cursor.execute(sql, bindings)
         connection.commit()
         connection.close()
 
@@ -65,7 +65,7 @@ class Archiver:
         returns a list of all bot ids stored in the database, including hidden ones
         """
         sql = """
-        SELECT bot_id from bots
+        SELECT _id from bots
         """
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -77,7 +77,7 @@ class Archiver:
     
     def get_bot(self, bot_id:int)->Bot:
         sql = """
-        SELECT * from bots WHERE bot_id = (:bot_id)
+        SELECT * from bots WHERE _id = (:bot_id)
         """
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -93,10 +93,10 @@ class Archiver:
     def store_user(self, user:User)->None:
         user_data = asdict(user)
         columns = []
-        placeholders = {}
+        bindings = {}
         for key, value in user_data.items():
             columns.append(key)
-            placeholders[key] = value
+            bindings[key] = value
              
         sql = f"""
             INSERT OR REPLACE INTO 
@@ -108,8 +108,8 @@ class Archiver:
             
         connection = self.get_connection()
         cursor = connection.cursor()
-        logger.info(f"Storing user data: {placeholders}")
-        cursor.execute(sql, placeholders)
+        logger.info(f"Storing user data: {bindings}")
+        cursor.execute(sql, bindings)
         connection.commit()
         connection.close()
     
@@ -130,9 +130,6 @@ class Archiver:
         conn.close()
         return user
 
-    def store_messages(self, messages:dict[int, Message])->None:
-        for position, msg in messages.items():
-            self.store_message(msg)
             
     def get_messages(self, conversation_id:int)-> dict[int,Message]:
         
@@ -155,10 +152,10 @@ class Archiver:
     def store_message(self,message:Message)->None:
         message_data = asdict(message)
         columns = []
-        placeholders = {}
+        bindings = {}
         for key, value in message_data.items():
             columns.append(key)
-            placeholders[key] = value
+            bindings[key] = value
              
         sql = f"""
             INSERT OR REPLACE INTO 
@@ -170,8 +167,8 @@ class Archiver:
             
         connection = self.get_connection()
         cursor = connection.cursor()
-        logger.info(f"Storing message data: {placeholders}")
-        cursor.execute(sql, placeholders)
+        logger.info(f"Storing message data: {bindings}")
+        cursor.execute(sql, bindings)
         connection.commit()
         connection.close()
 
@@ -188,9 +185,78 @@ class Archiver:
         conn.close()
         msg = Message(**msg_data)
         return msg
+
+    def get_conversation_list(self):
+        """
+        returns a list of all bot ids stored in the database, including hidden ones
+        """
+        sql = """
+        SELECT _id from conversations
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        rows = cursor.execute(sql).fetchall()
+        conn.close()
+        conversation_ids = [row[0] for row in rows]
+        
+        return conversation_ids
     
     def store_conversation(self, convo:Conversation)->None:
-        pass
+        """
+        Note: this will store the messages and id of the bot that participated
+        in the conversation, but it won't save the bot data itself
+        """
+        
+        convo_data={}
+        convo_data["_id"]=convo._id
+        convo_data["title"]=convo.title
+        convo_data["bot_id"] = convo.bot._id
+        for position, msg in convo.messages.items():
+            self.store_message(msg)
+        
+        
+        columns = []
+        bindings = {}
+        for key, value in convo_data.items():
+            columns.append(key)
+            bindings[key] = value
+             
+        sql = f"""
+            INSERT OR REPLACE INTO 
+            conversations 
+            ({", ".join(columns)})
+            VALUES 
+            ({", ".join(':' + name for name in columns)})
+            """
+            
+        connection = self.get_connection()
+        cursor = connection.cursor()
+        logger.info(f"Storing conversation data: {bindings}")
+        cursor.execute(sql, bindings)
+        connection.commit()
+        connection.close()
     
-    def get__conversation(self,convo_id)->Conversation:
-        pass
+    def get_conversation(self,convo_id, bot_gallery:BotGallery)->Conversation:
+        
+
+        sql = """
+            SELECT * FROM conversations WHERE _id = :_id        
+        """
+        bindings = {"_id":convo_id}
+        connection = self.get_connection()
+        cursor = connection.cursor()
+        logger.info(f"Storing conversation data: {bindings}")
+        rows = cursor.execute(sql, bindings).fetchall()
+        column_names = [description[0] for description in cursor.description]
+        convo_data = {name:value for name, value in zip(column_names,rows[0])}
+        connection.commit()
+        connection.close()
+
+        messages = self.get_messages(conversation_id=convo_id)
+        convo_id = convo_data["_id"]
+        title = convo_data["title"]
+        bot_id = convo_data["bot_id"]
+
+        bot = bot_gallery.get_bot(bot_id)
+        convo = Conversation(convo_id, title, bot,messages)    
+        return convo

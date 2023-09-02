@@ -5,6 +5,7 @@ from reviver.conversation import Message, Conversation
 from reviver.bot import Bot
 
 def test_conversation():
+    
     msg1 = Message(role="user", content="This is a test")
     msg2 = Message(role="assistant", content="I'm just here to help.")
     

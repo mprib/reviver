@@ -9,7 +9,7 @@ from enum import Enum
 @dataclass
 class Bot:
      
-    bot_id:int  
+    _id:int  
     name:str # must be unique among all bots in user's profile
     model: str 
     rank:int # used for ordering bot in list
@@ -27,7 +27,7 @@ class BotGallery:
     bots: dict = field(default_factory=dict[int, Bot])
     
     def add_bot(self, bot:Bot):
-        self.bots[bot.bot_id] = bot
+        self.bots[bot._id] = bot
     
     def create_new_bot(self, name:str, model:str):
         """
@@ -40,7 +40,9 @@ class BotGallery:
         bot = Bot(bot_id,name,model, rank=1)
         self.bots[bot_id] = bot
     
-     
+    def get_bot(self, bot_id:int)->Bot:
+        
+        return self.bots[bot_id]
      
     def get_max_id(self):
         bot_ids = []

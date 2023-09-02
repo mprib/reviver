@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS user (
 );
 
 CREATE TABLE IF NOT EXISTS bots (
-    bot_id INTEGER PRIMARY KEY NOT NULL,
+    _id INTEGER PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
     rank INTEGER NOT NULL,
     hidden BOOLEAN NOT NULL,
@@ -23,9 +23,7 @@ CREATE TABLE IF NOT EXISTS conversations (
     _id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     bot_id INTEGER,
-    user_id INTEGER,
-    FOREIGN KEY(bot_id) REFERENCES bots(id),
-    FOREIGN KEY(user_id) REFERENCES users(id)
+    FOREIGN KEY(bot_id) REFERENCES bots(id)
 );
 
 CREATE TABLE IF NOT EXISTS messages (

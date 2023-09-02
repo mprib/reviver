@@ -2,7 +2,7 @@ import reviver.logger
 
 logger = reviver.logger.get(__name__)
 from reviver.conversation import Message, Conversation
-from reviver.archiver import Archiver
+from reviver.archiver import Archive
 from pathlib import Path
 from reviver import ROOT
 from reviver.bot import Bot
@@ -15,11 +15,11 @@ def test_bot_creation():
 
     test_dir = Path(ROOT, "tests", "working_delete")
     delete_directory_contents(test_dir)
-    archive = Archiver(test_dir)
+    archive = Archive(test_dir)
 
     archive.store_bot(bot1)
 
-    
+
     
 if __name__ == "__main__":
     test_bot_creation()
