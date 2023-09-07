@@ -1,10 +1,9 @@
 import reviver.logger
-logger = reviver.logger.get(__name__)
 
 import openai
-import json
 import sys
 from keys import OPEN_ROUTER_API_KEY
+logger = reviver.logger.get(__name__)
 
 # just something here to have as a reference from https://openrouter.ai/docs
 model_dict = {
@@ -30,7 +29,7 @@ openai.api_key = OPEN_ROUTER_API_KEY
 
 # Set the headers to identify your app
 headers = {
-    "HTTP-Referer": "https://github.com/mprib/FestivalCobra",  # Replace with your actual site URL
+    "HTTP-Referer": "https://github.com/mprib/reviver",  # Replace with your actual site URL
     "X-Title": "Festival Cobra",  # Replace with your actual app name
 }
 
