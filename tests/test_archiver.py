@@ -2,8 +2,6 @@
 #%%
 import reviver.logger
 
-logger = reviver.logger.get(__name__)
-import datetime
 from reviver.conversation import Message, Conversation
 from reviver.archiver import Archive
 from pathlib import Path
@@ -11,6 +9,7 @@ from reviver import ROOT
 from reviver.bot import Bot, BotGallery
 from reviver.helper import delete_directory_contents
 from reviver.user import User
+logger = reviver.logger.get(__name__)
 
 def test_archive_init():
     test_dir = Path(ROOT, "tests", "working_delete")
@@ -23,7 +22,7 @@ def test_archive_init():
 
     logger.info("db should now exist...")
     del archiver
-    assert(not db_path.exists())
+    assert(db_path.exists())
     archiver_new = Archive(test_dir)
 
 def test_bot_store_retrieve():

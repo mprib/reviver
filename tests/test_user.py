@@ -31,9 +31,7 @@ def test_user_creation_and_load():
 
     assert(key_toml.exists())
 
-    # update user with keypath data
-    user.set_key_location(key_toml)
-    
+    user.key_location = str(key_toml)
     assert(user.keys == keys)
     
     archive = Archive(test_dir)
