@@ -1,10 +1,9 @@
 import reviver.logger
-logger = reviver.logger.get(__name__)
 
 import openai
-import json
 import sys
 from keys import OPEN_ROUTER_API_KEY
+logger = reviver.logger.get(__name__)
 
 # just something here to have as a reference from https://openrouter.ai/docs
 model_dict = {

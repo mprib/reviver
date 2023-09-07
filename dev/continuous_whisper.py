@@ -5,15 +5,14 @@ that we can get humans to adapt to working with LLMs quickly. So let's build som
 building new muscle memory, but that can make for robust interactions with LLMs. 
 """
 import reviver.logger
-logger = reviver.logger.get(__name__)
 import openai
-import base64
 from keys import WHISPER_API_KEY
 import pyaudio
 import wave
 from pathlib import Path
 from threading import Thread, Event
 import time
+logger = reviver.logger.get(__name__)
 
 # Substitute 'your-openai-api-key' with your actual OpenAI API key
 openai.api_key = WHISPER_API_KEY
