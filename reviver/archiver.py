@@ -1,8 +1,6 @@
-import rtoml
 import reviver.logger
-from dataclasses import dataclass, asdict
+from dataclasses import asdict
 
-logger = reviver.logger.get(__name__)
 from pathlib import Path
 from reviver.conversation import Conversation, Message
 
@@ -10,13 +8,15 @@ from reviver.bot import Bot, BotGallery
 from reviver.user import User
 
 import sqlite3
-from reviver import ROOT, SCHEMA_SQL
-from pathlib import Path
+from reviver import SCHEMA_SQL
+
+logger = reviver.logger.get(__name__)
 
 class Archive:
     def __init__(self, reviver_data_dir: Path) -> None:
         self.reviver_dir = reviver_data_dir
         self.user_id = 1 # current way I'm thinking about it, but who knows?
+        self.get_connection()
         
     def get_connection(self)->sqlite3.Connection:
         self.reviver_dir.mkdir(parents=True, exist_ok=True)
