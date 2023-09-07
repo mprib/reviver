@@ -3,8 +3,6 @@ Don't bother with trying to do fancy things to detect the beginning and end of s
 control that with tapping a key. It will be ok. I think a guiding light of this whole thing will be the idea
 that we can get humans to adapt to working with LLMs quickly. So let's build some workflows that may involve 
 building new muscle memory, but that can make for robust interactions with LLMs. 
-
-
 """
 import reviver.logger
 logger = reviver.logger.get(__name__)
