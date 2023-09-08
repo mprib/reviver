@@ -2,11 +2,11 @@ import requests
 import re
 import reviver.logger
 
-logger = reviver.logger.get(__name__)
 import polars as pl
 
 from keys import OPEN_ROUTER_API_KEY
 import json
+log = reviver.logger.get(__name__)
 
 class OpenRouterQueryHandler:
     def __init__(self) -> None:
@@ -26,9 +26,9 @@ class OpenRouterQueryHandler:
         key_usage = key_data["usage"]
         limit_remaining = key_data["limit_remaining"]
 
-        logger.info(f"Key Limit: {original_key_limit}")
-        logger.info(f"Key Usage: {key_usage}")
-        logger.info(f"Remaining Limit: {limit_remaining}")
+        log.info(f"Key Limit: {original_key_limit}")
+        log.info(f"Key Usage: {key_usage}")
+        log.info(f"Remaining Limit: {limit_remaining}")
 
         return key_data
 
