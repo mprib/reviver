@@ -237,7 +237,7 @@ class Archive:
         connection.commit()
         connection.close()
     
-    def get_conversation(self,convo_id, bot_gallery:BotGallery)->Conversation:
+    def get_conversation(self,convo_id, bot_gallery:BotGallery, user:User)->Conversation:
         
 
         sql = """
@@ -259,5 +259,5 @@ class Archive:
         bot_id = convo_data["bot_id"]
 
         bot = bot_gallery.get_bot(bot_id)
-        convo = Conversation(_id = convo_id, bot=bot, title=title, messages=messages)    
+        convo = Conversation(_id = convo_id,user=user, bot=bot, title=title, messages=messages)    
         return convo

@@ -102,14 +102,14 @@ def test_convo_store_retrieve():
     bot_gallery.add_bot(bot_2)
     
     user = User("TestUser", "C:/keys.toml")
-    convo = Conversation(1,bot=bot_1)
+    convo = Conversation(1,user=user, bot=bot_1)
 
     convo.add_message(msg1)
     convo.add_message(msg2)
 
     archive = get_new_test_archiver()
     archive.store_conversation(convo)
-    convo_copy = archive.get_conversation(convo_id=1, bot_gallery=bot_gallery) 
+    convo_copy = archive.get_conversation(convo_id=1,user=user, bot_gallery=bot_gallery) 
     logger.info("Confirm that saved and reloaded convo is same as original")
     assert(convo==convo_copy)
 

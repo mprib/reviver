@@ -41,7 +41,6 @@ class User:
                 
         else:
             keys = None
-        
             
         return keys
     

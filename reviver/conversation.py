@@ -1,10 +1,10 @@
 
 import reviver.logger
-logger = reviver.logger.get(__name__)
 from dataclasses import dataclass, field
 from datetime import datetime
 from reviver.bot import Bot
 from reviver.user import User
+log = reviver.logger.get(__name__)
 
 @dataclass
 class Message:
@@ -32,7 +32,7 @@ class Message:
 @dataclass(frozen=False, slots=True)
 class Conversation:
     _id: int
-
+    user: User
     bot: Bot 
     title: str = "untitled"
     messages: dict= field(default_factory=dict[int, Message])

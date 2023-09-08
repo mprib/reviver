@@ -1,8 +1,7 @@
 from dataclasses import dataclass, asdict, field
 from enum import Enum
-
-
-
+import reviver.logger
+log = reviver.logger.get(__name__)
 
 
 
@@ -20,7 +19,7 @@ class Bot:
     top_p: float =.5
     frequency_penalty:float =0
     presence_penalty:float =0
-
+    
 
 @dataclass
 class BotGallery:
