@@ -59,11 +59,13 @@ pre code {
 </style>
 """
 
-class MessageBlock(QWebEngineView):
-    def __init__(self, message:Message):
+
+
+class ContentBlock(QWebEngineView):
+    def __init__(self, content:str):
         super().__init__()
-        self.message = message        
-        plain_html = convert_markdown_to_html(self.message.content) 
+        self.content = content        
+        plain_html = convert_markdown_to_html(self.content) 
         self.html = style_code_blocks(plain_html)
         self.setHtml(self.html) 
         
@@ -145,7 +147,7 @@ Oh and here's a link [googl](www.google.com)
 """
     msg = Message(1, "user", content=content,position=1)
 
-    block = MessageBlock(msg)
+    block = ContentBlock(msg.content)
     block.show()
     
     sys.exit(app.exec())
