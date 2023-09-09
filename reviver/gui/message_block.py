@@ -4,11 +4,14 @@ from bs4 import BeautifulSoup
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name, guess_lexer
 from pygments.formatters import HtmlFormatter
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtCore import QUrl
 import html
 from reviver.conversation import Message
+from reviver.user import User
+from reviver.bot import Bot
+from datetime import datetime
 
 import reviver.logger
 log = reviver.logger.get(__name__)
@@ -59,7 +62,35 @@ pre code {
 </style>
 """
 
+class MessageBlock(QWidget):
+    
+    def __init__(self, message:Message, writer:User | Bot):
+        super().__init__()
+        self.message = message
 
+        self.content_block = ContentBlock(self.message.content)
+
+        self.writer_name = writer.name
+        
+        self.writer_label = QLabel()
+        self.writer_label.setText(f"<b>{self.writer_name}<\b>")
+
+        self.time_label = QLabel()
+        self.time_label.setText(self.message.time)
+        
+        # get time
+        self.time = self.message.time 
+        
+        self.place_widgets() 
+
+        
+    def place_widgets(self):
+        self.setLayout(QVBoxLayout())
+        self.banner = QHBoxLayout()
+        self.banner.addWidget(self.writer_label)
+        # self.banner.addWidget(self.time_label)
+        self.layout().addLayout(self.banner)
+        self.layout().addWidget(self.content_block)
 
 class ContentBlock(QWebEngineView):
     def __init__(self, content:str):
@@ -96,8 +127,10 @@ def style_code_blocks(html):
     # Add the CSS to the beginning of the HTML string
     return f'{CONTENT_CSS}<style>{css}</style>' + str(soup)
 
+
+    
+
 if __name__=="__main__":
-    app = QApplication([])
     
 
 
@@ -145,9 +178,16 @@ Oh and here's a link [googl](www.google.com)
 
 - and again  
 """
-    msg = Message(1, "user", content=content,position=1)
+    app = QApplication([])
 
-    block = ContentBlock(msg.content)
-    block.show()
+    msg = Message(1, "user", content=content,position=1)
+    user = User(name="Me The User")
+    bot = Bot(_id=1,name="friend", model="random", rank=1)
+
+    log.info(msg.time_as_datetime)
+    full_block = MessageBlock(msg, user)
+    full_block.show()
+    # block = ContentBlock(msg.content)
+    # block.show()
     
     sys.exit(app.exec())

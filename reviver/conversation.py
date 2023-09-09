@@ -30,7 +30,12 @@ class Message:
     def chat_bubble(self):
        return {"role":self.role, "content":self.content} 
 
- 
+    @property
+    def time_as_datetime(self):
+        format = f"%Y-%m-%d %H:%M:%S.%f"
+        t = datetime.strptime(self.time, format)
+        
+        return t
 @dataclass(frozen=False, slots=True)
 class Conversation:
     _id: int
