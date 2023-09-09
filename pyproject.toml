@@ -8,13 +8,14 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.10, <3.12"
-PySide6 = "^6.5.2"
 openai = "^0.27.9"
 requests = "^2.31.0"
 polars = "^0.18.15"
 tiktoken = "^0.4.0"
 rtoml = "^0.9.0"
 pyaudio = "^0.2.13" # note on linux had to run `sudo apt-get install portaudio19-dev`
+markdown = "^3.4.4"
+pyside6 = "^6.5.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.7.0"
