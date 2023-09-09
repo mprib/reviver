@@ -24,7 +24,7 @@ body {
 }
 
 h1 {
-  font-size: 2em; /* Adjust as needed */
+  font-size: 1.5em; 
   color: #444;
 }
 
@@ -42,7 +42,7 @@ a:hover {
 }
 
 code, pre {
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'ui-monospace', 'Cascadia Mono', 'Segoe UI Mono', 'Liberation Mono', Menlo, Monaco, Consolas, monospace;
   border-radius: 3px;
   padding: 0.2em 0.4em;
 }
