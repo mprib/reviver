@@ -11,7 +11,7 @@ import sys
 import reviver.logger
 log = reviver.logger.get(__name__)
 
-from reviver.gui.chat_bubble import get_text_code_blocks, starts_with_code
+from reviver.gui.message_blocks import get_text_code_blocks, starts_with_code
 
 
 
