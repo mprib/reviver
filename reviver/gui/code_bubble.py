@@ -22,7 +22,7 @@ class CodeWidget(QWidget):
         self.lang_label = QLabel()
         self.lang_label.setText(self.code_block.language)
         self.copy_btn = QPushButton("Copy") 
-
+        self.copy_btn.setFixedSize(self.copy_btn.sizeHint())
         self.place_widgets()
         self.connect_widgets()
         
