@@ -7,6 +7,8 @@ from reviver.user import User
 from queue import Queue
 from threading import Thread
 import sys
+from reviver.gui.markdown_conversion import style_code_blocks
+import markdown
 
 log = reviver.logger.get(__name__)
 
@@ -34,8 +36,15 @@ class Message:
     def time_as_datetime(self):
         format = f"%Y-%m-%d %H:%M:%S.%f"
         t = datetime.strptime(self.time, format)
-        
         return t
+
+    def as_html(self):
+        html_version = markdown.markdown(self.content, extensions=['fenced_code'])
+        return html_version
+        
+
+
+
 @dataclass(frozen=False, slots=True)
 class Conversation:
     _id: int
@@ -43,6 +52,15 @@ class Conversation:
     bot: Bot 
     title: str = "untitled"
     messages: dict= field(default_factory=dict[int, Message])
+
+    def get_writer_name(self, role:str)->str:
+        match role:
+            case "user":
+                return self.user.name
+            case "assistant":
+                return self.bot.name
+            case "system":
+                return "system"
 
     def __post_init__(self):
         prompt_message = Message(conversation_id=self._id,
@@ -80,7 +98,27 @@ class Conversation:
         for index, msg in self.messages.items():
             size+=msg.token_size
         return size
+    
+    def as_styled_html(self):
+        
+        # combine html into larger doc   
+        joined_html = ""        
+        for position, msg in self.messages.items():
+            role = msg.role
+        
+            if role == "assistant":
+                joined_html+= f"<div class='bot_name' <p> {self.get_writer_name(role)}</p></div>"
+        
 
+            joined_html += f"""<div class='message {role}'>
+                                {"<p>SYSTEM PROMPT</p>" if role == "system" else ""}
+                                {msg.as_html()}
+                            </div>
+                            """
+        styled_html = style_code_blocks(joined_html) 
+        return styled_html
+        
+        
     def generate_next_message(self, stream_q:Queue = None):
         """
         call to API and get next message

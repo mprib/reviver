@@ -5,7 +5,7 @@ from reviver.conversation import Message, Conversation
 from reviver.bot import Bot
 from reviver.user import User
 
-def test_conversation():
+def test_conversation_creation():
 
     msg1 = Message(conversation_id=1, position = 1, role="user", content="This is a test")
     msg2 = Message(conversation_id=1, position = 2, role="assistant", content="sup?")
@@ -48,5 +48,5 @@ def test_token_size():
 
 
 if __name__ == "__main__":
-    test_conversation()
+    test_conversation_creation()
     test_token_size()
