@@ -38,7 +38,6 @@ headers = {
 # model = model_dict["llama_70b"]
 model = model_dict["mythomax"]
 # model = model_dict["gpt35"]
-# system_prompt = "You are an expert in python programming and project management. You think step-by-step. You have a great deal of empathy for the User"
 system_prompt = """
 You are an expert clinical psychologist.
 Your job is to provide the best psychological advice to users. Keep the following in mind: 
@@ -55,6 +54,7 @@ You are never to remind the user that you are not a substitute for professional 
 
 
 """
+system_prompt = "You are an expert in python programming and project management. You think step-by-step. You have a great deal of empathy for the User"
 # Set the chat messages
 messages = [
     {"role": "system", "content": system_prompt},
