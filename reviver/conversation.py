@@ -137,6 +137,7 @@ class Conversation:
                 "X-Title": "Festival Cobra",  # Replace with your actual app name
             }
 
+            log.info(f"pinging server with message: {self.messages[self.message_count]}")
             response_stream = openai.ChatCompletion.create(
                     model=self.bot.model, 
                     messages=self.messages_prompt,
@@ -159,13 +160,17 @@ class Conversation:
                         new_word = delta["content"]
                     
                         # queue may be used to populate output in real time
-                        q.put(new_word)
+                        if q is not None:
+                            q.put(new_word)
                         reply += new_word
                         # sys.stdout.write(new_word)
                         # sys.stdout.flush()
                 
             # signal end of reply
-            q.put(None)
+            if q is not None:
+                q.put(None)
+
+            log.info(f"New reply is {reply}")
 
             new_message = Message(conversation_id=self._id, role="assistant", content=reply)
             self.add_message(new_message)
