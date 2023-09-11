@@ -14,7 +14,5 @@ Things that I would like to have in an interface for LLMs:
 - checks on speech-to-text that can autoformat (via dedicated bots) to maintain clarity of conversation even if my engagement is more conversational.
 - interface for multiple models
 - tracking of current active context length with presentation of approximate costs per message as conversation expands...
-- 
-- 
 
 
