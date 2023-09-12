@@ -42,8 +42,19 @@ class Message:
         html_version = markdown.markdown(self.content, extensions=['fenced_code'])
         return html_version
         
+    def as_styled_html(self):
+        styled_html=""
+        if self.role == "assistant":
+            styled_html+= f"<div class='bot_name' <p> bot </p></div>"
+        
+        styled_html += f"""<div class='message {self.role}'>
+                            {"<p>SYSTEM PROMPT</p>" if self.role == "system" else ""}
+                            {self.as_html()}
+                        </div>
+                        """
+        styled_html = style_code_blocks(styled_html)
 
-
+        return styled_html
 
 @dataclass(frozen=False, slots=True)
 class Conversation:
@@ -104,18 +115,9 @@ class Conversation:
         # combine html into larger doc   
         joined_html = ""        
         for position, msg in self.messages.items():
-            role = msg.role
-        
-            if role == "assistant":
-                joined_html+= f"<div class='bot_name' <p> {self.get_writer_name(role)}</p></div>"
-        
-
-            joined_html += f"""<div class='message {role}'>
-                                {"<p>SYSTEM PROMPT</p>" if role == "system" else ""}
-                                {msg.as_html()}
-                            </div>
-                            """
-        styled_html = style_code_blocks(joined_html) 
+            joined_html += msg.as_styled_html()
+        # styled_html = style_code_blocks(joined_html) 
+        styled_html = joined_html
         return styled_html
         
         

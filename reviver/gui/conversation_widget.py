@@ -133,7 +133,7 @@ class ConversationWidget(QWidget):
         # Add a new message to the end of the conversation
         js_code = f'''
         var element = document.createElement('div');
-        element.innerHTML = `{new_message.as_html()}`;
+        element.innerHTML = `{new_message.as_styled_html()}`;
         document.body.appendChild(element);
         window.scrollTo(0, document.body.scrollHeight);
         '''
