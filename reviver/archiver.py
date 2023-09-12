@@ -77,6 +77,24 @@ class Archive:
 
         return bot_ids
 
+    def store_bot_gallery(self, bot_gallery:BotGallery):
+        
+        for bot_id, bot in bot_gallery.bots.items():
+            self.store_bot(bot)
+        
+    def get_bot_gallery(self):
+
+        bot_list =self.get_bot_list()
+        logger.info(f"Loading up bot list:{bot_list}")
+        bots = {}
+        for bot_id in bot_list:
+            bot = self.get_bot(bot_id)
+            bots[bot_id] = bot
+        
+        bot_gallery = BotGallery(bots)
+        return bot_gallery
+         
+        
     def get_bot(self, bot_id: int) -> Bot:
         sql = """
         SELECT * from bots WHERE _id = (:bot_id)

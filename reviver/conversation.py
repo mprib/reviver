@@ -7,7 +7,7 @@ from reviver.user import User
 from queue import Queue
 from threading import Thread
 import sys
-from reviver.gui.markdown_conversion import style_code_blocks
+from reviver.gui.markdown_conversion import style_code_blocks, CONTENT_CSS
 import markdown
 
 log = reviver.logger.get(__name__)
@@ -42,8 +42,19 @@ class Message:
         html_version = markdown.markdown(self.content, extensions=['fenced_code'])
         return html_version
         
+    def as_styled_html(self):
+        styled_html=""
+        if self.role == "assistant":
+            styled_html+= f"<div class='bot_name' <p> bot </p></div>"
+        
+        styled_html += f"""<div class='message {self.role}'>
+                            {"<p>SYSTEM PROMPT</p>" if self.role == "system" else ""}
+                            {self.as_html()}
+                        </div>
+                        """
+        styled_html = style_code_blocks(styled_html)
 
-
+        return styled_html
 
 @dataclass(frozen=False, slots=True)
 class Conversation:
@@ -102,20 +113,11 @@ class Conversation:
     def as_styled_html(self):
         
         # combine html into larger doc   
-        joined_html = ""        
+        joined_html = CONTENT_CSS        
         for position, msg in self.messages.items():
-            role = msg.role
-        
-            if role == "assistant":
-                joined_html+= f"<div class='bot_name' <p> {self.get_writer_name(role)}</p></div>"
-        
-
-            joined_html += f"""<div class='message {role}'>
-                                {"<p>SYSTEM PROMPT</p>" if role == "system" else ""}
-                                {msg.as_html()}
-                            </div>
-                            """
-        styled_html = style_code_blocks(joined_html) 
+            joined_html += msg.as_styled_html()
+        # styled_html = style_code_blocks(joined_html) 
+        styled_html = joined_html
         return styled_html
         
         
@@ -137,6 +139,7 @@ class Conversation:
                 "X-Title": "Festival Cobra",  # Replace with your actual app name
             }
 
+            log.info(f"pinging server with message: {self.messages[self.message_count]}")
             response_stream = openai.ChatCompletion.create(
                     model=self.bot.model, 
                     messages=self.messages_prompt,
@@ -159,13 +162,17 @@ class Conversation:
                         new_word = delta["content"]
                     
                         # queue may be used to populate output in real time
-                        q.put(new_word)
+                        if q is not None:
+                            q.put(new_word)
                         reply += new_word
                         # sys.stdout.write(new_word)
                         # sys.stdout.flush()
                 
             # signal end of reply
-            q.put(None)
+            if q is not None:
+                q.put(None)
+
+            log.info(f"New reply is {reply}")
 
             new_message = Message(conversation_id=self._id, role="assistant", content=reply)
             self.add_message(new_message)

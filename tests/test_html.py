@@ -77,25 +77,3 @@ def test_conversation_to_html():
 if __name__ == "__main__":
     test_message_to_html()
     test_conversation_to_html()
-    from PySide6.QtWebEngineWidgets import QWebEngineView
-    from PySide6.QtWidgets import QApplication
-    import sys
-    app = QApplication([])
-
-    user = User(name="Me The User")
-    bot = Bot(_id=1,name="friend", model="random", rank=1)
-    convo = Conversation(_id = 1, user=user, bot=bot)
-    msg1 = Message(1, "user", content=content,position=1)
-    msg2 = Message(2, "assistant", content=" This is some *stuff*",position=2)
-    msg3 = Message(3, "user", content="# heading \n this is another question",position=1)
-
-    convo.add_message(msg1)
-    convo.add_message(msg2)
-    convo.add_message(msg3)
-
-    web_view = QWebEngineView()
-    
-    web_view.setHtml(convo.as_styled_html())
-
-    web_view.show() 
-    sys.exit(app.exec())

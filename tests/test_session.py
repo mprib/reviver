@@ -8,7 +8,7 @@ from reviver.user import User
 from reviver.helper import delete_directory_contents
 import reviver.logger
 from reviver.session import Session
-logger = reviver.logger.get(__name__)
+log = reviver.logger.get(__name__)
 
 
 def test_session_creation():
@@ -17,7 +17,24 @@ def test_session_creation():
     delete_directory_contents(test_dir)
 
     
+    key_location=Path(ROOT, "keys.toml")
+    user = User(name="Me The User", key_location=key_location)
+    log.info(user.keys)
+
+    log.info(user.keys)
+    model = "jondurbin/airoboros-l2-70b-2.1"
+    bot = Bot(_id=1,name="rocket_logic", model=model, rank=1)
+    
+    archive = Archive(test_dir)
+
+    archive.store_user(user)
+    archive.store_bot(bot)
+    del archive
+
     session = Session(test_dir)
+
+
+    # session.start_conversatin(bot_id=1)
     
         
 
