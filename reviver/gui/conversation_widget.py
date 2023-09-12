@@ -15,7 +15,9 @@ from reviver.conversation import Message, Conversation
 from reviver.user import User
 from reviver.bot import Bot
 from datetime import datetime
-
+from queue import Queue
+from pathlib import Path
+from reviver import ROOT
 import reviver.logger
 log = reviver.logger.get(__name__)
 
@@ -111,8 +113,9 @@ class ConversationWidget(QWidget):
         self.place_widgets()
         self.connect_widgets()
         self.chat_display.setHtml(self.conversation.as_styled_html())
-        
-             
+        self.bot_out_q = Queue()
+    
+       
     def place_widgets(self):
         
         self.setLayout(QVBoxLayout())
@@ -127,8 +130,10 @@ class ConversationWidget(QWidget):
     def send_message(self):
         log.info(f"Sending: {self.text_entry.toPlainText()}")
         new_message  = Message(self.conversation._id, role= "user", content=self.text_entry.toPlainText())
+        self.text_entry.clear() # no longer needed now that message is created
         self.conversation.add_message(new_message)
-    
+        self.conversation.generate_next_message(self.bot_out_q) 
+
         # Add a new message to the end of the conversation
         js_code = f'''
         var element = document.createElement('div');
@@ -139,64 +144,28 @@ class ConversationWidget(QWidget):
         self.chat_display.page().runJavaScript(js_code)
 
         log.info(f"Current location is {self.chat_display.page().scrollPosition()}") 
+        
 
         
 if __name__=="__main__":
     
-    content = """
-    
-This is some basic content. Lets
-just keep this here
-    
-for now. 
-    
-```python
-print("hello world")
-print("hello world")
-print("hello world")
-print("hello world")
-print("hello world")
-print("hello world")
-print("hello world")
-print("hello world")
-print("hello world")
-print("hello world")
-print("hello world")
-print("hello world")
-
-# comment
-def display_html_in_qwebengineview(html_content):
-    app = QApplication([])
-    view = QWebEngineView()
-    unescaped_html = html.unescape(html_content)
-    view.setHtml(unescaped_html)
-    view.show()
-    sys.exit(app.exec())
-```
-
-#why do I even care?
-    
-The story of stuff and things. 
-
-This is something that I'm going to *emphasize*. I don't really know what to do about that.
-
-Oh and here's a link [googl](www.google.com)
-
-- this is a point
-- here is anotehr one
-
-- and again  
-"""
     app = QApplication([])
 
-    user = User(name="Me The User")
-    bot = Bot(_id=1,name="friend", model="random", rank=1)
+    key_location=Path(ROOT, "keys.toml")
+    user = User(name="Me The User", key_location=key_location)
+
+    log.info(user.keys)
+    model = "jondurbin/airoboros-l2-70b-2.1"
+    bot = Bot(_id=1,name="rocket_logic", model=model, rank=1)
     convo = Conversation(_id = 1, user=user, bot=bot)
-    msg1 = Message(1, "user", content=content,position=1)
-    msg2 = Message(2, "assistant", content=" This is some *stuff*",position=2)
+    # user = User(name="Me The User")
+    # bot = Bot(_id=1,name="friend", model="random", rank=1)
+    # convo = Conversation(_id = 1, user=user, bot=bot)
+    # msg1 = Message(1, "user", content=content,position=1)
+    # msg2 = Message(2, "assistant", content=" This is some *stuff*",position=2)
 
-    convo.add_message(msg1)
-    convo.add_message(msg2)
+    # convo.add_message(msg1)
+    # convo.add_message(msg2)
 
     convo_widget = ConversationWidget(convo)
 
