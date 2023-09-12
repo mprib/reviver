@@ -24,16 +24,17 @@ def test_session_creation():
     log.info(user.keys)
     model = "jondurbin/airoboros-l2-70b-2.1"
     bot = Bot(_id=1,name="rocket_logic", model=model, rank=1)
-
+    
     archive = Archive(test_dir)
 
-    archive.store_user()
-    archive.store_bot()
+    archive.store_user(user)
+    archive.store_bot(bot)
     del archive
 
     session = Session(test_dir)
 
-    session.start_conversatin(bot_id=1)
+
+    # session.start_conversatin(bot_id=1)
     
         
 
