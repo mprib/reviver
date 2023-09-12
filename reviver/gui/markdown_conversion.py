@@ -92,17 +92,24 @@ def style_code_blocks(html)->str:
     code_css = formatter.get_style_defs('.highlight')
 
     for block in soup.find_all('code'):
-        language = block.get('class', [None])[0]
-        if language is not None:
-            language = language[9:]  # remove 'language-' prefix
-        code = block.string
+        
+        if block.parent.name == "pre": # full code block
+          language = block.get('class', [None])[0]
+          if language is not None:
+              language = language[9:]  # remove 'language-' prefix
+          code = block.string
 
-        if language is None:
-            lexer = guess_lexer(code)
+          if language is None:
+              lexer = guess_lexer(code)
+          else:
+              lexer = get_lexer_by_name(language)
+
+          highlighted_code = highlight(code, lexer, formatter)
+          block.string.replace_with(BeautifulSoup(highlighted_code, 'html.parser'))
         else:
-            lexer = get_lexer_by_name(language)
-
-        highlighted_code = highlight(code, lexer, formatter)
-        block.string.replace_with(BeautifulSoup(highlighted_code, 'html.parser'))
+          # inline code 
+          block['style'] = 'font-family: monospace;'
+          
     # Add the CSS to the beginning of the HTML string
-    return f'{CONTENT_CSS}<style>{code_css}</style>' + str(soup)
+    # return f'{CONTENT_CSS}<style>{code_css}</style>' + str(soup)
+    return f'<style>{code_css}</style>' + str(soup)

@@ -7,7 +7,7 @@ from reviver.user import User
 from queue import Queue
 from threading import Thread
 import sys
-from reviver.gui.markdown_conversion import style_code_blocks
+from reviver.gui.markdown_conversion import style_code_blocks, CONTENT_CSS
 import markdown
 
 log = reviver.logger.get(__name__)
@@ -113,7 +113,7 @@ class Conversation:
     def as_styled_html(self):
         
         # combine html into larger doc   
-        joined_html = ""        
+        joined_html = CONTENT_CSS        
         for position, msg in self.messages.items():
             joined_html += msg.as_styled_html()
         # styled_html = style_code_blocks(joined_html) 
