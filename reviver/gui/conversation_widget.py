@@ -141,15 +141,6 @@ class ConversationWidget(QWidget):
 
         log.info(f"Current location is {self.chat_display.page().scrollPosition()}") 
 
-    # def send_message(self):
-    #     log.info(f"Sending: {self.text_entry.toPlainText()}")
-    #     new_message  = Message(self.conversation._id, role= "user", content=self.text_entry.toPlainText())
-    #     self.conversation.add_message(new_message)
-    #     self.chat_display.setHtml(self.conversation.as_styled_html())
-    #     log.info(f"Current location is {self.chat_display.page().scrollPosition()}")
-
-    #     # Schedule the scroll operation
-    #     # QTimer.singleShot(7, self.scroll_to_bottom)        
 
     def scroll_to_bottom(self):
         # Scroll the off-screen display to the bottom
