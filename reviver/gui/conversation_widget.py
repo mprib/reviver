@@ -123,7 +123,6 @@ class ConversationWidget(QWidget):
         
     def connect_widgets(self):
         self.send_text.clicked.connect(self.send_message) 
-        self.chat_display.loadFinished.connect(self.scroll_to_bottom)
     
     def send_message(self):
         log.info(f"Sending: {self.text_entry.toPlainText()}")
@@ -141,12 +140,6 @@ class ConversationWidget(QWidget):
 
         log.info(f"Current location is {self.chat_display.page().scrollPosition()}") 
 
-
-    def scroll_to_bottom(self):
-        # Scroll the off-screen display to the bottom
-        log.info("_chat_display load finished")
-        self.chat_display.page().runJavaScript("window.scrollTo(0, document.body.scrollHeight);")
-    
         
 if __name__=="__main__":
     
