@@ -9,6 +9,8 @@ from threading import Thread
 import sys
 from reviver.gui.markdown_conversion import style_code_blocks, CONTENT_CSS
 import markdown
+from PySide6.QtCore import QObject, Signal
+
 
 log = reviver.logger.get(__name__)
 
@@ -20,6 +22,26 @@ class Message:
     position:int = None
     time: str = str(datetime.now())
 
+    @property
+    def backtic_complete_content(self) -> str:
+        """
+        Used to make sure that the stylized html will render python correctly when it is in the middle
+        of being drafted by the bot.
+        """
+        # check if the content has an odd number of triple backticks
+        if self.content.count('```') % 2 != 0:
+            # if so, append a set of triple backticks to the end
+            return self.content + '\n```'
+        else:
+            return self.content
+
+    @property
+    def _id(self):
+        """
+        Used to identify specific message divisions in conversation widget's webview html 
+        """
+        return f"message-{self.conversation_id}-{self.position}"
+        
     @property
     def token_size(self):
         """
@@ -39,7 +61,8 @@ class Message:
         return t
 
     def as_html(self):
-        html_version = markdown.markdown(self.content, extensions=['fenced_code'])
+        # html_version = markdown.markdown(self.content, extensions=['fenced_code'])
+        html_version = markdown.markdown(self.backtic_complete_content, extensions=['fenced_code'])
         return html_version
         
     def as_styled_html(self):
@@ -47,7 +70,7 @@ class Message:
         if self.role == "assistant":
             styled_html+= f"<div class='bot_name' <p> bot </p></div>"
         
-        styled_html += f"""<div class='message {self.role}'>
+        styled_html += f"""<div id='{self._id}' class='message {self.role}'>
                             {"<p>SYSTEM PROMPT</p>" if self.role == "system" else ""}
                             {self.as_html()}
                         </div>
@@ -56,6 +79,13 @@ class Message:
 
         return styled_html
 
+class QtSignaler(QObject):
+    """
+    Not sure if this is necessary right now...but started building it out...
+    """
+    new_styled_message = Signal(Message) 
+    new_styled_message = Signal(Message) 
+
 @dataclass(frozen=False, slots=True)
 class Conversation:
     _id: int
@@ -63,6 +93,7 @@ class Conversation:
     bot: Bot 
     title: str = "untitled"
     messages: dict= field(default_factory=dict[int, Message])
+    qt_signal:QtSignaler = QtSignaler()
 
     def get_writer_name(self, role:str)->str:
         match role:
@@ -85,6 +116,7 @@ class Conversation:
         next_position = self.message_count+1
         msg.position = next_position
         self.messages[next_position] = msg
+        self.qt_signal.new_styled_message.emit(msg)        
 
     @property
     def message_count(self):
@@ -121,14 +153,14 @@ class Conversation:
         return styled_html
         
         
-    def generate_next_message(self, stream_q:Queue = None):
+    def generate_next_message(self):
         """
         call to API and get next message
         stream queue will receive words as they are generated
         otherwise, message is just added to messages
         """
 
-        def chat_completion_worker(q:Queue):
+        def worker():
             # Set the base API URL and your OpenRouter API key
             openai.api_base = "https://openrouter.ai/api/v1"
             openai.api_key = self.user.keys["OPEN_ROUTER_API_KEY"]
@@ -152,6 +184,10 @@ class Conversation:
                     stream=True
                 )
 
+            # create a new empty message
+            new_message = Message(conversation_id=self._id, role="assistant", content="")
+            self.add_message(new_message)
+
             reply = ""
             response_count = 0
             for response in response_stream:
@@ -160,27 +196,17 @@ class Conversation:
                     delta = response.choices[0]["delta"]
                     if delta != {}:
                         new_word = delta["content"]
-                    
-                        # queue may be used to populate output in real time
-                        if q is not None:
-                            q.put(new_word)
                         reply += new_word
-                        # sys.stdout.write(new_word)
-                        # sys.stdout.flush()
-                
-            # signal end of reply
-            if q is not None:
-                q.put(None)
+                        new_message.content = reply
+                        self.qt_signal.new_styled_message.emit(new_message)
+                        # self.qt_signal.new_plain_message.emit(new_message)
 
+            new_message.content = reply 
             log.info(f"New reply is {reply}")
-
-            new_message = Message(conversation_id=self._id, role="assistant", content=reply)
-            self.add_message(new_message)
-            sys.stdout.write("\n")
+            self.qt_signal.new_styled_message.emit(new_message)
 
             if response_count == 0:
                 log.info("No response")        
-                pass
 
-        thread = Thread(target=chat_completion_worker,args=[stream_q],daemon=True )
+        thread = Thread(target=worker,args=[],daemon=True )
         thread.start()
