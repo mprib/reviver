@@ -23,6 +23,19 @@ class Message:
     time: str = str(datetime.now())
 
     @property
+    def backtic_complete_content(self) -> str:
+        """
+        Used to make sure that the stylized html will render python correctly when it is in the middle
+        of being drafted by the bot.
+        """
+        # check if the content has an odd number of triple backticks
+        if self.content.count('```') % 2 != 0:
+            # if so, append a set of triple backticks to the end
+            return self.content + '\n```'
+        else:
+            return self.content
+
+    @property
     def _id(self):
         """
         Used to identify specific message divisions in conversation widget's webview html 
@@ -48,7 +61,8 @@ class Message:
         return t
 
     def as_html(self):
-        html_version = markdown.markdown(self.content, extensions=['fenced_code'])
+        # html_version = markdown.markdown(self.content, extensions=['fenced_code'])
+        html_version = markdown.markdown(self.backtic_complete_content, extensions=['fenced_code'])
         return html_version
         
     def as_styled_html(self):

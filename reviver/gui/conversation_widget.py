@@ -5,6 +5,7 @@ from reviver.user import User
 from reviver.bot import Bot
 from pathlib import Path
 from reviver import ROOT
+import json
 import reviver.logger
 log = reviver.logger.get(__name__)
 
@@ -126,14 +127,17 @@ class ConversationWidget(QWidget):
         
     def add_styled_message_to_webview(self, msg:Message):
         # Add a new message to the end of the conversation
+        # styled_html = msg.backtic_complete_content
+        # styled_html = json.dumps(styled_html)
+        styled_html = msg.as_styled_html()
         js_code = f'''
         var element = document.getElementById('{msg._id}');
         if (element) {{
-            element.innerHTML = `{msg.as_styled_html()}`;
+            element.innerHTML = `{styled_html}`;
         }} else {{
             var newElement = document.createElement('div');
             newElement.id = '{msg._id}';
-            newElement.innerHTML = `{msg.as_styled_html()}`;
+            newElement.innerHTML = `{styled_html}`;
             document.body.appendChild(newElement);
         }}
         window.scrollTo(0, document.body.scrollHeight);
@@ -150,6 +154,8 @@ if __name__=="__main__":
 
     log.info(user.keys)
     model = "jondurbin/airoboros-l2-70b-2.1"
+    model = "meta-llama/codellama-34b-instruct"
+    model = "openai/gpt-4"
     bot = Bot(_id=1,name="rocket_logic", model=model, rank=1, max_tokens=2000)
     convo = Conversation(_id = 1, user=user, bot=bot)
 
