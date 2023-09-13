@@ -9,7 +9,7 @@ from threading import Thread
 import sys
 from reviver.gui.markdown_conversion import style_code_blocks, CONTENT_CSS
 import markdown
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, Signal
 
 
 log = reviver.logger.get(__name__)
@@ -62,8 +62,8 @@ class QtSignaler(QObject):
     """
     Not sure if this is necessary right now...but started building it out...
     """
-    pass
-    
+    new_message = Signal(Message) 
+    new_word = Signal(str)
 
 @dataclass(frozen=False, slots=True)
 class Conversation:
@@ -72,7 +72,7 @@ class Conversation:
     bot: Bot 
     title: str = "untitled"
     messages: dict= field(default_factory=dict[int, Message])
-    qt_signaler:QtSignaler = QtSignaler()
+    qt_signal:QtSignaler = QtSignaler()
 
     def get_writer_name(self, role:str)->str:
         match role:
@@ -95,6 +95,7 @@ class Conversation:
         next_position = self.message_count+1
         msg.position = next_position
         self.messages[next_position] = msg
+        self.qt_signal.new_message.emit(msg)        
 
     @property
     def message_count(self):
@@ -131,14 +132,14 @@ class Conversation:
         return styled_html
         
         
-    def generate_next_message(self, stream_q:Queue = None):
+    def generate_next_message(self):
         """
         call to API and get next message
         stream queue will receive words as they are generated
         otherwise, message is just added to messages
         """
 
-        def chat_completion_worker(q:Queue):
+        def worker():
             # Set the base API URL and your OpenRouter API key
             openai.api_base = "https://openrouter.ai/api/v1"
             openai.api_key = self.user.keys["OPEN_ROUTER_API_KEY"]
@@ -170,18 +171,9 @@ class Conversation:
                     delta = response.choices[0]["delta"]
                     if delta != {}:
                         new_word = delta["content"]
-                    
-                        # queue may be used to populate output in real time
-                        if q is not None:
-                            q.put(new_word)
+                        self.qt_signal.new_word.emit(new_word) 
                         reply += new_word
-                        # sys.stdout.write(new_word)
-                        # sys.stdout.flush()
                 
-            # signal end of reply
-            if q is not None:
-                q.put(None)
-
             log.info(f"New reply is {reply}")
 
             new_message = Message(conversation_id=self._id, role="assistant", content=reply)
@@ -192,5 +184,5 @@ class Conversation:
                 log.info("No response")        
                 pass
 
-        thread = Thread(target=chat_completion_worker,args=[stream_q],daemon=True )
+        thread = Thread(target=worker,args=[],daemon=True )
         thread.start()

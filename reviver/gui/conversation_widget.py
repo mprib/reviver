@@ -1,21 +1,8 @@
-import sys
-from typing import Optional
-from markdown import markdown
-from bs4 import BeautifulSoup
-from pygments import highlight
-from pygments.lexers import get_lexer_by_name, guess_lexer
-from pygments.formatters import HtmlFormatter
 from PySide6.QtWidgets import QTextEdit, QPushButton, QTextBrowser, QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QScrollArea
 from PySide6.QtWebEngineWidgets import QWebEngineView
-from PySide6.QtCore import QUrl
-from PySide6 import Qt
-from PySide6.QtCore import QTimer
-import html
 from reviver.conversation import Message, Conversation
 from reviver.user import User
 from reviver.bot import Bot
-from datetime import datetime
-from queue import Queue
 from pathlib import Path
 from reviver import ROOT
 import reviver.logger
@@ -113,9 +100,8 @@ class ConversationWidget(QWidget):
         self.place_widgets()
         self.connect_widgets()
         self.chat_display.setHtml(self.conversation.as_styled_html())
-        self.bot_out_q = Queue()
-    
-       
+
+     
     def place_widgets(self):
         
         self.setLayout(QVBoxLayout())
@@ -125,26 +111,30 @@ class ConversationWidget(QWidget):
         self.layout().addWidget(self.send_text)
         
     def connect_widgets(self):
-        self.send_text.clicked.connect(self.send_message) 
-    
-    def send_message(self):
+        self.send_text.clicked.connect(self.create_user_message) 
+        # self.chat_display.page().loadFinished.connect(self.enable_bot_reply)
+        self.conversation.qt_signal.new_message.connect(self.add_message_to_webview)
+        self.page_ready = True
+        
+    def create_user_message(self):
         log.info(f"Sending: {self.text_entry.toPlainText()}")
+        # self.text_entry.setEnabled(False)
         new_message  = Message(self.conversation._id, role= "user", content=self.text_entry.toPlainText())
         self.text_entry.clear() # no longer needed now that message is created
         self.conversation.add_message(new_message)
-        self.conversation.generate_next_message(self.bot_out_q) 
+        self.conversation.generate_next_message()
 
+    def add_message_to_webview(self,msg:Message):
         # Add a new message to the end of the conversation
         js_code = f'''
         var element = document.createElement('div');
-        element.innerHTML = `{new_message.as_styled_html()}`;
+        element.innerHTML = `{msg.as_styled_html()}`;
         document.body.appendChild(element);
         window.scrollTo(0, document.body.scrollHeight);
         '''
         self.chat_display.page().runJavaScript(js_code)
-
         log.info(f"Current location is {self.chat_display.page().scrollPosition()}") 
-        
+
 
         
 if __name__=="__main__":
@@ -158,14 +148,6 @@ if __name__=="__main__":
     model = "jondurbin/airoboros-l2-70b-2.1"
     bot = Bot(_id=1,name="rocket_logic", model=model, rank=1)
     convo = Conversation(_id = 1, user=user, bot=bot)
-    # user = User(name="Me The User")
-    # bot = Bot(_id=1,name="friend", model="random", rank=1)
-    # convo = Conversation(_id = 1, user=user, bot=bot)
-    # msg1 = Message(1, "user", content=content,position=1)
-    # msg2 = Message(2, "assistant", content=" This is some *stuff*",position=2)
-
-    # convo.add_message(msg1)
-    # convo.add_message(msg2)
 
     convo_widget = ConversationWidget(convo)
 
