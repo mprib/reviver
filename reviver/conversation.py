@@ -9,6 +9,8 @@ from threading import Thread
 import sys
 from reviver.gui.markdown_conversion import style_code_blocks, CONTENT_CSS
 import markdown
+from PySide6.QtCore import QObject
+
 
 log = reviver.logger.get(__name__)
 
@@ -56,6 +58,13 @@ class Message:
 
         return styled_html
 
+class QtSignaler(QObject):
+    """
+    Not sure if this is necessary right now...but started building it out...
+    """
+    pass
+    
+
 @dataclass(frozen=False, slots=True)
 class Conversation:
     _id: int
@@ -63,6 +72,7 @@ class Conversation:
     bot: Bot 
     title: str = "untitled"
     messages: dict= field(default_factory=dict[int, Message])
+    qt_signaler:QtSignaler = QtSignaler()
 
     def get_writer_name(self, role:str)->str:
         match role:
