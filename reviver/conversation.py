@@ -23,6 +23,13 @@ class Message:
     time: str = str(datetime.now())
 
     @property
+    def _id(self):
+        """
+        Used to identify specific message divisions in conversation widget's webview html 
+        """
+        return f"message-{self.conversation_id}-{self.position}"
+        
+    @property
     def token_size(self):
         """
         Token size is a generalization based on the rule that 1 token ~= 4 characters:
@@ -49,7 +56,7 @@ class Message:
         if self.role == "assistant":
             styled_html+= f"<div class='bot_name' <p> bot </p></div>"
         
-        styled_html += f"""<div class='message {self.role}'>
+        styled_html += f"""<div id='{self._id}' class='message {self.role}'>
                             {"<p>SYSTEM PROMPT</p>" if self.role == "system" else ""}
                             {self.as_html()}
                         </div>
@@ -62,8 +69,8 @@ class QtSignaler(QObject):
     """
     Not sure if this is necessary right now...but started building it out...
     """
-    new_message = Signal(Message) 
-    new_word = Signal(str)
+    new_styled_message = Signal(Message) 
+    new_styled_message = Signal(Message) 
 
 @dataclass(frozen=False, slots=True)
 class Conversation:
@@ -95,7 +102,7 @@ class Conversation:
         next_position = self.message_count+1
         msg.position = next_position
         self.messages[next_position] = msg
-        self.qt_signal.new_message.emit(msg)        
+        self.qt_signal.new_styled_message.emit(msg)        
 
     @property
     def message_count(self):
@@ -163,6 +170,10 @@ class Conversation:
                     stream=True
                 )
 
+            # create a new empty message
+            new_message = Message(conversation_id=self._id, role="assistant", content="")
+            self.add_message(new_message)
+
             reply = ""
             response_count = 0
             for response in response_stream:
@@ -171,18 +182,17 @@ class Conversation:
                     delta = response.choices[0]["delta"]
                     if delta != {}:
                         new_word = delta["content"]
-                        self.qt_signal.new_word.emit(new_word) 
                         reply += new_word
-                
-            log.info(f"New reply is {reply}")
+                        new_message.content = reply
+                        self.qt_signal.new_styled_message.emit(new_message)
+                        # self.qt_signal.new_plain_message.emit(new_message)
 
-            new_message = Message(conversation_id=self._id, role="assistant", content=reply)
-            self.add_message(new_message)
-            sys.stdout.write("\n")
+            new_message.content = reply 
+            log.info(f"New reply is {reply}")
+            self.qt_signal.new_styled_message.emit(new_message)
 
             if response_count == 0:
                 log.info("No response")        
-                pass
 
         thread = Thread(target=worker,args=[],daemon=True )
         thread.start()

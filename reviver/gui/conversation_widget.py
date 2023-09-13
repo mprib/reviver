@@ -112,9 +112,8 @@ class ConversationWidget(QWidget):
         
     def connect_widgets(self):
         self.send_text.clicked.connect(self.create_user_message) 
-        # self.chat_display.page().loadFinished.connect(self.enable_bot_reply)
-        self.conversation.qt_signal.new_message.connect(self.add_message_to_webview)
-        self.page_ready = True
+        self.conversation.qt_signal.new_styled_message.connect(self.add_styled_message_to_webview)
+
         
     def create_user_message(self):
         log.info(f"Sending: {self.text_entry.toPlainText()}")
@@ -124,17 +123,22 @@ class ConversationWidget(QWidget):
         self.conversation.add_message(new_message)
         self.conversation.generate_next_message()
 
-    def add_message_to_webview(self,msg:Message):
+        
+    def add_styled_message_to_webview(self, msg:Message):
         # Add a new message to the end of the conversation
         js_code = f'''
-        var element = document.createElement('div');
-        element.innerHTML = `{msg.as_styled_html()}`;
-        document.body.appendChild(element);
+        var element = document.getElementById('{msg._id}');
+        if (element) {{
+            element.innerHTML = `{msg.as_styled_html()}`;
+        }} else {{
+            var newElement = document.createElement('div');
+            newElement.id = '{msg._id}';
+            newElement.innerHTML = `{msg.as_styled_html()}`;
+            document.body.appendChild(newElement);
+        }}
         window.scrollTo(0, document.body.scrollHeight);
         '''
         self.chat_display.page().runJavaScript(js_code)
-        log.info(f"Current location is {self.chat_display.page().scrollPosition()}") 
-
 
         
 if __name__=="__main__":
@@ -146,7 +150,7 @@ if __name__=="__main__":
 
     log.info(user.keys)
     model = "jondurbin/airoboros-l2-70b-2.1"
-    bot = Bot(_id=1,name="rocket_logic", model=model, rank=1)
+    bot = Bot(_id=1,name="rocket_logic", model=model, rank=1, max_tokens=2000)
     convo = Conversation(_id = 1, user=user, bot=bot)
 
     convo_widget = ConversationWidget(convo)
