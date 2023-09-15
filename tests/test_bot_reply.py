@@ -46,20 +46,16 @@ def test_bot_reply():
     assert(convo.message_count==2) # system prompt + "proceed" 
     convo.generate_next_message(stream_q)
     
-    while True:
-        new_word = stream_q.get()
-        if new_word is None:
-            break
-        else:
-            sys.stdout.write(new_word)
-            sys.stdout.flush()
+    new_message = stream_q.get()
+    log.info("Reply came back")
 
     assert(convo.message_count==3) # new message added
 
     message:Message = convo.messages[convo.message_count]
-
+    assert(message == new_message)
     # had to make a more genrous assertion to just "contains" because it wasn't giving only this...
     assert(message.content.__contains__("HELLO WORLD"))
-    
+    log.info("Reply came back as requested")
+
 if __name__ == "__main__":
     test_bot_reply()
