@@ -1,7 +1,7 @@
 from dataclasses import dataclass, asdict, field
 from enum import Enum
-import reviver.logger
-log = reviver.logger.get(__name__)
+import reviver.log
+log = reviver.log.get(__name__)
 
 
 

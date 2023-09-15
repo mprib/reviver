@@ -6,8 +6,8 @@ from reviver.bot import Bot
 from pathlib import Path
 from reviver import ROOT
 import json
-import reviver.logger
-log = reviver.logger.get(__name__)
+import reviver.log
+log = reviver.log.get(__name__)
 
 CONTENT_CSS = """
 <style>

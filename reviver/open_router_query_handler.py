@@ -1,12 +1,12 @@
 import requests
 import re
-import reviver.logger
+import reviver.log
 
 import polars as pl
 
 from keys import OPEN_ROUTER_API_KEY
 import json
-log = reviver.logger.get(__name__)
+log = reviver.log.get(__name__)
 
 class OpenRouterQueryHandler:
     def __init__(self) -> None:

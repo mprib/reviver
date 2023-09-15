@@ -1,6 +1,6 @@
 
 #%%
-import reviver.logger
+import reviver.log
 
 from reviver.conversation import Message, Conversation
 from reviver.archiver import Archive
@@ -9,7 +9,7 @@ from reviver import ROOT
 from reviver.bot import Bot, BotGallery
 from reviver.helper import delete_directory_contents
 from reviver.user import User
-logger = reviver.logger.get(__name__)
+logger = reviver.log.get(__name__)
 
 def test_archive_init():
     test_dir = Path(ROOT, "tests", "working_delete")

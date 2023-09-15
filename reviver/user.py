@@ -4,12 +4,12 @@ I suspect that this is where a bunch of the interesting stuff is going to
 happen in terms of curation of projects/history/priorities, etc
 
 """
-import reviver.logger
+import reviver.log
 import rtoml
 from dataclasses import dataclass, asdict, field
 from reviver.bot import Bot
 from pathlib import Path
-log = reviver.logger.get(__name__)
+log = reviver.log.get(__name__)
 
 
 @dataclass

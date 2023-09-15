@@ -14,8 +14,8 @@ from reviver import ROOT
 from pathlib import Path
 from queue import Queue
 import sys
-import reviver.logger
-log = reviver.logger.get(__name__)
+import reviver.log
+log = reviver.log.get(__name__)
 
 def test_bot_reply():
     """

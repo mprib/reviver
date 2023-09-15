@@ -1,10 +1,10 @@
 from reviver.conversation import Message, Conversation
 from reviver.bot import Bot
 from reviver.user import User
-import reviver.logger
+import reviver.log
 from bs4 import BeautifulSoup
 
-log = reviver.logger.get(__name__)
+log = reviver.log.get(__name__)
 
 content = """
 This is some basic content. Lets
