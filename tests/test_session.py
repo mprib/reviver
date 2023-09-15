@@ -2,7 +2,7 @@
 from reviver.conversation import Message, Conversation
 from reviver.archiver import Archive
 from pathlib import Path
-from reviver import ROOT, USER_SETTINGS
+from reviver import ROOT, REVIVER_SETTINGS
 from reviver.bot import Bot
 from reviver.user import User
 from reviver.helper import delete_directory_contents
