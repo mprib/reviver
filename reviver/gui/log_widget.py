@@ -20,17 +20,18 @@ class LogWidget(QWidget):
     def append_log(self, text):
         self.text_edit.append(text)
 
-def log_statements():
-    logger = get(__name__)
-    while True:
-        logger.info("Logging statement at: " + time.ctime())
-        time.sleep(1)
 
 if __name__ == "__main__":
     app = QApplication([])
     widget = LogWidget()
     widget.show()
 
+    # test real time logging...
+    def log_statements():
+        logger = get(__name__)
+        while True:
+            logger.info("Logging statement at: " + time.ctime())
+            time.sleep(1)
     log_thread = threading.Thread(target=log_statements, daemon=True)
     log_thread.start()
 
