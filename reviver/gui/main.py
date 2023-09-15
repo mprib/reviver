@@ -1,8 +1,9 @@
 import sys
 from typing import Optional
-from PySide6.QtWidgets import QWidget, QTextEdit, QMainWindow, QVBoxLayout, QPushButton,QApplication, QMenuBar
+from PySide6.QtWidgets import QFileDialog, QWidget, QTextEdit, QMainWindow, QVBoxLayout, QPushButton,QApplication, QMenuBar
 from PySide6.QtGui import QIcon, QAction, QKeySequence, QShortcut
 from reviver import APP_DIR, USER_DIR, REVIVER_SETTINGS
+from pathlib import Path
 import reviver.log
 log = reviver.log.get(__name__)
 
@@ -19,15 +20,34 @@ class MainWindow(QMainWindow):
         self.place_widgets()
         self.connect_widgets()
         
-        log.info(f"User Settings are ")
+        log.info(f"Reviver Settings are {REVIVER_SETTINGS}")
 
     def place_widgets(self):
         self.layout = QVBoxLayout(self.central_widget)
         self.setCentralWidget(self.central_widget)
 
     def connect_widgets(self):
-        pass
+        self.menu.action_new.triggered.connect(self.create_new_archive)
 
+
+    def create_new_archive(self):
+        dialog = QFileDialog()
+        new_directory = QFileDialog.getExistingDirectory(parent=None, 
+                                                     caption='Select a folder:', 
+                                                     dir=str(USER_DIR), 
+                                                     options=QFileDialog.ShowDirsOnly)
+        if new_directory:
+            log.info(("Creating new project in :", new_directory))
+            self.add_archive_to_recent(new_directory)
+            self.load_archive(new_directory)
+        
+
+    def add_archive_to_recent(self, archive_dir:Path):
+        REVIVER_SETTINGS["recent_archives"] += [str(archive_dir)]
+        log.info(f"recent archives updated to: {REVIVER_SETTINGS['recent_archives']}")
+
+    def load_archive(self, archive_dir:Path):
+        pass
     
 class MainMenus(QMenuBar):
     def __init__(self, parent):
@@ -36,14 +56,14 @@ class MainMenus(QMenuBar):
         self.view_menu = self.addMenu("&View")
 
         # File Menu
-        self.new_action = QAction("&New Archive", self)
-        self.file_menu.addAction(self.new_action)
+        self.action_new = QAction("&New Archive", self)
+        self.file_menu.addAction(self.action_new)
 
-        self.open_action = QAction("&Open Archive", self)
-        self.file_menu.addAction(self.open_action)
+        self.action_open = QAction("&Open Archive", self)
+        self.file_menu.addAction(self.action_open)
         
-        self.open_recent_action = QAction("Open &Recent Archive", self)
-        self.file_menu.addAction(self.open_recent_action)
+        self.action_open_recent = QAction("Open &Recent Archive", self)
+        self.file_menu.addAction(self.action_open_recent)
 
         # View Menu
 
