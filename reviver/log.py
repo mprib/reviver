@@ -66,6 +66,11 @@ def get(name):  # as in __name__
     log.setLevel(logging.INFO)
     log.addHandler(terminal_handler)
     log.addHandler(log_file_handler)
+
+    # Check if the IS_DEBUG environment variable is not set before adding qt_handler
+    # this is set withn vscode in launch.json
+    # if os.getenv('IS_DEBUG') is None:
+    #     log.addHandler(qt_handler)
     log.addHandler(qt_handler)
-    
+   
     return log
