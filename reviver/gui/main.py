@@ -1,9 +1,11 @@
 import sys
 from typing import Optional
-from PySide6.QtWidgets import QFileDialog, QWidget, QTextEdit, QMainWindow, QVBoxLayout, QPushButton,QApplication, QMenuBar
+from PySide6.QtWidgets import QFileDialog, QWidget, QTextEdit,QDockWidget, QMainWindow, QVBoxLayout, QPushButton,QApplication, QMenuBar
 from PySide6.QtGui import QIcon, QAction, QKeySequence, QShortcut
+from PySide6.QtCore import Qt
 from reviver import APP_DIR, USER_DIR, REVIVER_SETTINGS
 from pathlib import Path
+from reviver.gui.log_widget import LogWidget
 import reviver.log
 log = reviver.log.get(__name__)
 
@@ -13,21 +15,30 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("reviver")
         self.setGeometry(100, 100, 800, 600)
-        self.menu = MainMenus(self) # what I'm trying to inject into the main window
+        self.menu = MainMenus(self) 
         self.setMenuBar(self.menu)
         
         self.central_widget = QWidget(self)
+        self.construct_log()
         self.place_widgets()
         self.connect_widgets()
         
         log.info(f"Reviver Settings are {REVIVER_SETTINGS}")
 
+    def construct_log(self):
+        self.docked_log = QDockWidget()
+        self.docked_log.setWidget(LogWidget())
+        self.docked_log.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.docked_log)
+        
+    
+    
     def place_widgets(self):
         self.layout = QVBoxLayout(self.central_widget)
         self.setCentralWidget(self.central_widget)
 
     def connect_widgets(self):
-        self.menu.action_new.triggered.connect(self.create_new_archive)
+        self.menu.action_archive.triggered.connect(self.create_new_archive)
 
 
     def create_new_archive(self):
@@ -56,17 +67,16 @@ class MainMenus(QMenuBar):
         self.view_menu = self.addMenu("&View")
 
         # File Menu
-        self.action_new = QAction("&New Archive", self)
-        self.file_menu.addAction(self.action_new)
-
-        self.action_open = QAction("&Open Archive", self)
-        self.file_menu.addAction(self.action_open)
+        self.action_archive = QAction("Create or Open &Archive", self)
+        self.file_menu.addAction(self.action_archive)
         
         self.action_open_recent = QAction("Open &Recent Archive", self)
         self.file_menu.addAction(self.action_open_recent)
 
         # View Menu
-
+        self.action_view_log = QAction("&Log", self)
+        self.view_menu.addAction(self.action_view_log)
+        
 
 
 
