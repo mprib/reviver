@@ -13,6 +13,8 @@ class Session:
 
         log.info(f"Launching session for data stored in {reviver_data_dir}")
         self.archive_dir = reviver_data_dir
+        
+        # load archive if it exists; otherwise creates it
         self.archive = Archive(self.archive_dir)
         self.user = self.archive.get_user()
 
