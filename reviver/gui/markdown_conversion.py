@@ -4,85 +4,11 @@ from bs4 import BeautifulSoup
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name, guess_lexer
 from pygments.formatters import HtmlFormatter
+from reviver import ROOT
+from pathlib import Path
 
-CONTENT_CSS = """
-<style>
-
-/* General styles for all messages */
-.message {
-    font-family: Arial, sans-serif;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    padding-left: 20px;
-    padding-right: 20px;
-    margin-bottom: 5px;
-    border-radius: 5px;
-}
-
-/* User message styles */
-.user {
-    background-color: #95defb; 
-    color: #000; /* Black */
-    margin-right: 5%; /* Shift to left */
-}
-
-/* Bot message styles */
-.assistant {
-    background-color: #a8ffa4; 
-    color: #000; /* Black */
-    margin-left: 5%; /* Shift to right */
-}
-
-/* System message styles */
-.system {
-    background-color: #dcdcdc; /* Gray*/
-    color: #000; /* Black */
-    font-style: italic;
-}
-
-.bot_name {
-    font-family: monospace;
-    font-style: bold;
-    margin-left: 5%; /* Shift to right */
-  
-}
-
-h1 {
-  font-size: 1.5em; 
-  color: #444;
-}
-
-h2, h3, h4, h5, h6 {
-  color: #444;
-}
-
-a {
-  color: #0645ad;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-code, pre {
-  font-family: 'ui-monospace', 'Cascadia Mono', 'Segoe UI Mono', 'Liberation Mono', Menlo, Monaco, Consolas, monospace;
-  border-radius: 3px;
-  padding: 0.2em 0.4em;
-}
-
-pre {
-  padding: 1em;
-  overflow: auto;
-}
-
-pre code {
-  background: none;
-  border: none;
-  padding: 0
-
-</style>
-"""
+with open(Path(ROOT, "reviver", "gui", "conversation.css")) as f:
+    CONTENT_CSS = f.read()
 
 def style_code_blocks(html)->str:
     soup = BeautifulSoup(html, 'html.parser')

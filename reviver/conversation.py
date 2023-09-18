@@ -145,7 +145,7 @@ class Conversation:
     def as_styled_html(self):
         
         # combine html into larger doc   
-        joined_html = CONTENT_CSS        
+        joined_html = "<style>" + CONTENT_CSS + "</style>"      
         for position, msg in self.messages.items():
             joined_html += msg.as_styled_html()
         # styled_html = style_code_blocks(joined_html) 
