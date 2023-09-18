@@ -27,14 +27,14 @@ CONTENT_CSS = """
 .user {
     background-color: #95defb; 
     color: #000; /* Black */
-    margin-right: 5%; /* Shift to left */
+    margin-left: 5%; /* Shift to right */
 }
 
 /* Bot message styles */
 .assistant {
     background-color: #a8ffa4; 
     color: #000; /* Black */
-    margin-left: 5%; /* Shift to right */
+    margin-right: 5%; /* Shift to left */
 }
 
 /* System message styles */
@@ -104,9 +104,7 @@ class ConversationWidget(QWidget):
 
      
     def place_widgets(self):
-        
         self.setLayout(QVBoxLayout())
-        
         self.layout().addWidget(self.chat_display)
         self.layout().addWidget(self.text_entry)
         self.layout().addWidget(self.send_text)
