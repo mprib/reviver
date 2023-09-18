@@ -1,4 +1,5 @@
-from PySide6.QtWidgets import QApplication,  QWidget, QFormLayout, QLineEdit,QTextEdit, QCheckBox, QSpinBox, QDoubleSpinBox, QSlider
+from PySide6.QtWidgets import QApplication,  QWidget, QFormLayout, QLineEdit, QTextEdit, QCheckBox, QSlider, QHBoxLayout, QDoubleSpinBox, QSpinBox
+from PySide6.QtCore import Qt
 from reviver.bot import Bot
 
 class BotWidget(QWidget):
@@ -14,22 +15,11 @@ class BotWidget(QWidget):
         self.model_widget = QLineEdit()
         self.hidden_widget = QCheckBox()
         self.system_prompt_widget = QTextEdit()
-        self.max_tokens_widget = QSlider()
-        self.temperature_widget = QSlider()
-        self.top_p_widget = QSlider()
-        self.frequency_penalty_widget = QSlider()
-        self.presence_penalty_widget = QSlider()
-
-        # Connect widgets to update methods
-        self.name_widget.textChanged.connect(self.update_name)
-        self.model_widget.textChanged.connect(self.update_model)
-        self.hidden_widget.toggled.connect(self.update_hidden)
-        self.system_prompt_widget.textChanged.connect(self.update_system_prompt)
-        self.max_tokens_widget.valueChanged.connect(self.update_max_tokens)
-        self.temperature_widget.valueChanged.connect(self.update_temperature)
-        self.top_p_widget.valueChanged.connect(self.update_top_p)
-        self.frequency_penalty_widget.valueChanged.connect(self.update_frequency_penalty)
-        self.presence_penalty_widget.valueChanged.connect(self.update_presence_penalty)
+        self.max_tokens_widget = self.create_slider_spinbox_pair(1, 1000, 1, self.update_max_tokens)
+        self.temperature_widget = self.create_slider_spinbox_pair(0, 2,.05, self.update_temperature)
+        self.top_p_widget = self.create_slider_spinbox_pair(0, 1,.05,  self.update_top_p)
+        self.frequency_penalty_widget = self.create_slider_spinbox_pair(0, 2,.05, self.update_frequency_penalty)
+        self.presence_penalty_widget = self.create_slider_spinbox_pair(0, 2,.05, self.update_presence_penalty)
 
         # Add widgets to form layout
         self.form.addRow("name", self.name_widget)
@@ -48,16 +38,59 @@ class BotWidget(QWidget):
         # Load bot data into widgets
         self.load_bot()
 
+    def create_slider_spinbox_pair(self, min_value, max_value, step_size, slot):
+
+        multiplier = 100  # for two decimal points precision
+
+        slider = QSlider(Qt.Horizontal)
+        slider.setMinimum(min_value * multiplier)
+        slider.setMaximum(max_value * multiplier)
+        slider.setSingleStep(step_size * multiplier)
+        slider.setValue(min_value * multiplier)
+
+
+        if step_size ==1:
+            spinbox = QSpinBox()
+        else:
+            spinbox = QDoubleSpinBox()
+
+        spinbox.setMinimum(min_value)
+        spinbox.setMaximum(max_value)
+        spinbox.setSingleStep(step_size)
+        spinbox.setValue(min_value)
+
+        slider.valueChanged.connect(lambda value: spinbox.setValue(value / multiplier))
+        spinbox.valueChanged.connect(lambda value: slider.setValue(value * multiplier))
+        spinbox.valueChanged.connect(slot)
+
+        container = QHBoxLayout()
+        container.addWidget(slider)
+        container.addWidget(spinbox)
+
+        return container
+
+
     def load_bot(self):
+        def set_slider_spinbox_value(layout, value):
+            # Slider is the first child in the layout
+            slider = layout.itemAt(0).widget()
+            slider.setValue(value)
+        
+            # SpinBox is the second child in the layout
+            spinbox = layout.itemAt(1).widget()
+            spinbox.setValue(value)
+
         self.name_widget.setText(self.bot.name)
         self.model_widget.setText(self.bot.model)
         self.hidden_widget.setChecked(self.bot.hidden)
         self.system_prompt_widget.setText(self.bot.system_prompt)
-        self.max_tokens_widget.setValue(self.bot.max_tokens)
-        self.temperature_widget.setValue(self.bot.temperature)
-        self.top_p_widget.setValue(self.bot.top_p)
-        self.frequency_penalty_widget.setValue(self.bot.frequency_penalty)
-        self.presence_penalty_widget.setValue(self.bot.presence_penalty)
+        
+        set_slider_spinbox_value(self.max_tokens_widget, self.bot.max_tokens)
+        set_slider_spinbox_value(self.temperature_widget, self.bot.temperature)
+        set_slider_spinbox_value(self.top_p_widget, self.bot.top_p)
+        set_slider_spinbox_value(self.frequency_penalty_widget, self.bot.frequency_penalty)
+        set_slider_spinbox_value(self.presence_penalty_widget, self.bot.presence_penalty)
+
 
     def update_id(self, value):
         self.bot._id = int(value)
