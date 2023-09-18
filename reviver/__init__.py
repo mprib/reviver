@@ -20,9 +20,9 @@ ROOT = Path(__file__).parent.parent
 
 
 if SETTING_PATH.exists():
-    USER_SETTINGS = rtoml.load(SETTING_PATH)
+    REVIVER_SETTINGS = rtoml.load(SETTING_PATH)
 else:
-    USER_SETTINGS = {} 
+    REVIVER_SETTINGS = {"recent_archives":[]} 
 
 LOG_PATH = Path(APP_DIR, "log.txt")
 

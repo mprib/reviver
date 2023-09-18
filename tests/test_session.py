@@ -2,13 +2,13 @@
 from reviver.conversation import Message, Conversation
 from reviver.archiver import Archive
 from pathlib import Path
-from reviver import ROOT, USER_SETTINGS
+from reviver import ROOT, REVIVER_SETTINGS
 from reviver.bot import Bot
 from reviver.user import User
 from reviver.helper import delete_directory_contents
-import reviver.logger
+import reviver.log
 from reviver.session import Session
-log = reviver.logger.get(__name__)
+log = reviver.log.get(__name__)
 
 
 def test_session_creation():

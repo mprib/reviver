@@ -1,5 +1,5 @@
 import openai
-import reviver.logger
+import reviver.log
 from dataclasses import dataclass, field
 from datetime import datetime
 from reviver.bot import Bot
@@ -12,7 +12,7 @@ import markdown
 from PySide6.QtCore import QObject, Signal
 
 
-log = reviver.logger.get(__name__)
+log = reviver.log.get(__name__)
 
 @dataclass
 class Message:
@@ -145,7 +145,7 @@ class Conversation:
     def as_styled_html(self):
         
         # combine html into larger doc   
-        joined_html = CONTENT_CSS        
+        joined_html = "<style>" + CONTENT_CSS + "</style>"      
         for position, msg in self.messages.items():
             joined_html += msg.as_styled_html()
         # styled_html = style_code_blocks(joined_html) 
@@ -153,11 +153,11 @@ class Conversation:
         return styled_html
         
         
-    def generate_next_message(self):
+    def generate_next_message(self, out_q:Queue=None):
         """
         call to API and get next message
-        stream queue will receive words as they are generated
-        otherwise, message is just added to messages
+        message is added to self.messages
+        if out_q is provided, then message is passed along on it in addition to being added
         """
 
         def worker():
@@ -204,6 +204,10 @@ class Conversation:
             new_message.content = reply 
             log.info(f"New reply is {reply}")
             self.qt_signal.new_styled_message.emit(new_message)
+
+            # currently used primarily for testing...might be useful elsewhere
+            if out_q is not None:
+                out_q.put(new_message)
 
             if response_count == 0:
                 log.info("No response")        

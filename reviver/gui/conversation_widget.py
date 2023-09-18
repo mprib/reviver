@@ -6,87 +6,8 @@ from reviver.bot import Bot
 from pathlib import Path
 from reviver import ROOT
 import json
-import reviver.logger
-log = reviver.logger.get(__name__)
-
-CONTENT_CSS = """
-<style>
-
-/* General styles for all messages */
-.message {
-    font-family: Arial, sans-serif;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    padding-left: 20px;
-    padding-right: 20px;
-    margin-bottom: 5px;
-    border-radius: 5px;
-}
-
-/* User message styles */
-.user {
-    background-color: #95defb; 
-    color: #000; /* Black */
-    margin-right: 5%; /* Shift to left */
-}
-
-/* Bot message styles */
-.assistant {
-    background-color: #a8ffa4; 
-    color: #000; /* Black */
-    margin-left: 5%; /* Shift to right */
-}
-
-/* System message styles */
-.system {
-    background-color: #dcdcdc; /* Gray*/
-    color: #000; /* Black */
-    font-style: italic;
-}
-
-.bot_name {
-    font-family: monospace;
-    font-style: bold;
-    margin-left: 5%; /* Shift to right */
-  
-}
-
-h1 {
-  font-size: 1.5em; 
-  color: #444;
-}
-
-h2, h3, h4, h5, h6 {
-  color: #444;
-}
-
-a {
-  color: #0645ad;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-code, pre {
-  font-family: 'ui-monospace', 'Cascadia Mono', 'Segoe UI Mono', 'Liberation Mono', Menlo, Monaco, Consolas, monospace;
-  border-radius: 3px;
-  padding: 0.2em 0.4em;
-}
-
-pre {
-  padding: 1em;
-  overflow: auto;
-}
-
-pre code {
-  background: none;
-  border: none;
-  padding: 0
-
-</style>
-"""
+import reviver.log
+log = reviver.log.get(__name__)
 
 class ConversationWidget(QWidget):
     def __init__(self, conversation:Conversation):
@@ -104,9 +25,7 @@ class ConversationWidget(QWidget):
 
      
     def place_widgets(self):
-        
         self.setLayout(QVBoxLayout())
-        
         self.layout().addWidget(self.chat_display)
         self.layout().addWidget(self.text_entry)
         self.layout().addWidget(self.send_text)
@@ -153,9 +72,9 @@ if __name__=="__main__":
     user = User(name="Me The User", key_location=key_location)
 
     log.info(user.keys)
-    model = "jondurbin/airoboros-l2-70b-2.1"
     model = "meta-llama/codellama-34b-instruct"
     model = "openai/gpt-4"
+    model = "jondurbin/airoboros-l2-70b-2.1"
     bot = Bot(_id=1,name="rocket_logic", model=model, rank=1, max_tokens=2000)
     convo = Conversation(_id = 1, user=user, bot=bot)
 

@@ -27,3 +27,6 @@ pandas = "^2.0.3"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+reviver= "reviver.__main__:command_line_launcher"

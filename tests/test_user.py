@@ -10,8 +10,8 @@ from reviver.bot import Bot
 from reviver.user import User
 import rtoml
 from reviver.helper import delete_directory_contents
-import reviver.logger
-logger = reviver.logger.get(__name__)
+import reviver.log
+logger = reviver.log.get(__name__)
 
 
 def test_user_creation_and_load():

@@ -1,6 +1,6 @@
-import reviver.logger
+import reviver.log
 
-logger = reviver.logger.get(__name__)
+logger = reviver.log.get(__name__)
 from reviver.conversation import Message, Conversation
 from reviver.bot import Bot
 from reviver.user import User

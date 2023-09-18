@@ -7,12 +7,12 @@ and right now this is all just a bit too vague and conceptual....
 """
 from pathlib import Path
 from reviver import USER_DIR
-import reviver.logger
+import reviver.log
 from reviver.archiver import Archive
 from reviver.user import User
 import rtoml
 
-log = reviver.logger.get(__name__)
+log = reviver.log.get(__name__)
 log.info(f"Spinning up reviver in {USER_DIR}")
 
 archive_dir = Path(USER_DIR, "reviver")

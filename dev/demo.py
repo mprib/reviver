@@ -9,8 +9,8 @@ from threading import Thread
 from queue import Queue
 
 import sys
-import reviver.logger
-log = reviver.logger.get(__name__)
+import reviver.log
+log = reviver.log.get(__name__)
 
 
 key_location=Path(ROOT, "keys.toml")

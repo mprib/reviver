@@ -1,4 +1,4 @@
-import reviver.logger
+import reviver.log
 from dataclasses import asdict
 
 from pathlib import Path
@@ -10,7 +10,7 @@ from reviver.user import User
 import sqlite3
 from reviver import SCHEMA_SQL
 
-logger = reviver.logger.get(__name__)
+logger = reviver.log.get(__name__)
 
 
 class Archive:

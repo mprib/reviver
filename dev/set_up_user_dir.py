@@ -16,7 +16,7 @@ e.g.:
             Conversation: Comedy_Club_2023_08_30
 """
 
-from reviver import USER_DIR, USER_SETTINGS, SETTING_PATH
+from reviver import USER_DIR, REVIVER_SETTINGS, SETTING_PATH
 from pathlib import Path
 import rtoml
 # Create a new profile folder for user
@@ -26,8 +26,8 @@ profile_dir = Path(USER_DIR,"Reviver", user_name )
 
 profile_dir.mkdir(parents=True, exist_ok=True)
 
-USER_SETTINGS["most_recent_profile_dir"] = str(profile_dir)
-rtoml.dump(USER_SETTINGS, SETTING_PATH)
+REVIVER_SETTINGS["most_recent_profile_dir"] = str(profile_dir)
+rtoml.dump(REVIVER_SETTINGS, SETTING_PATH)
 
 
 

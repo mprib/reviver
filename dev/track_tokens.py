@@ -2,8 +2,8 @@
 # %%
 import requests
 import re
-import reviver.logger
-logger = reviver.logger.get(__name__)
+import reviver.log
+logger = reviver.log.get(__name__)
 import polars as pl
 
 from keys import OPEN_ROUTER_API_KEY
