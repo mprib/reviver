@@ -17,4 +17,6 @@ Things that I would like to have in an interface for LLMs:
 
 - have a project directory view for a given conversation and check/uncheck boxes to include them in the context of the conversation.
 - 
+# License
 
+This package is licensed under the permissive MIT license. Have at it if you like. Please note that it is uses--though does not modify--PySide6 which is licensed under [LGPL](https://www.gnu.org/licenses/lgpl-3.0.en.html). 
