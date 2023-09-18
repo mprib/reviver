@@ -15,4 +15,6 @@ Things that I would like to have in an interface for LLMs:
 - interface for multiple models
 - tracking of current active context length with presentation of approximate costs per message as conversation expands...
 
+- have a project directory view for a given conversation and check/uncheck boxes to include them in the context of the conversation.
+- 
 
