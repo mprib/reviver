@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, Q
 from PySide6.QtCore import Slot
 from reviver import USER_DIR
 
-class CustomWidget(QWidget):
+class NewArchiveWidget(QWidget):
     def __init__(self):
         super().__init__()
 
@@ -69,7 +69,7 @@ class CustomWidget(QWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    widget = CustomWidget()
+    widget = NewArchiveWidget()
     widget.show()
 
     sys.exit(app.exec())
