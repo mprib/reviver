@@ -75,6 +75,7 @@ if __name__=="__main__":
     model = "jondurbin/airoboros-l2-70b-2.1"
     model = "meta-llama/codellama-34b-instruct"
     model = "openai/gpt-4"
+    model = "gryphe/mythomax-l2-13b"
     bot = Bot(_id=1,name="rocket_logic", model=model, rank=1, max_tokens=5000)
     convo = Conversation(_id = 1, user=user, bot=bot)
 
