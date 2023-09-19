@@ -23,7 +23,7 @@ def test_bot_reply():
     Keys are stored in ROOT/keys.toml which should *not* be version controlled
     """
     test_key_toml = Path(ROOT, "keys.toml")
-    user = User("test", key_location=test_key_toml)
+    user = User("test", dot_env_loc=test_key_toml)
     # model = "meta-llama/llama-2-70b-chat"
     model = "openai/gpt-3.5-turbo-0301"
     bot = Bot(_id=1, name = "test_bot", model=model,rank=1, system_prompt="You will only reply with the word:HELLO WORLD. It should be spelled in all capitals with no other punctuation. User will say 'proceed' and then you will responsd with 'HELLO WORLD'.")

@@ -14,7 +14,7 @@ log = reviver.log.get(__name__)
 
 
 key_location=Path(ROOT, "keys.toml")
-user = User(name="Me The User", key_location=key_location)
+user = User(name="Me The User", dot_env_loc=key_location)
 
 log.info(user.keys)
 model = "jondurbin/airoboros-l2-70b-2.1"

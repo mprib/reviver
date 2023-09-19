@@ -69,13 +69,14 @@ if __name__=="__main__":
     app = QApplication([])
 
     key_location=Path(ROOT, "keys.toml")
-    user = User(name="Me The User", key_location=key_location)
+    user = User(name="Me The User", dot_env_loc=key_location)
 
     log.info(user.keys)
+    model = "jondurbin/airoboros-l2-70b-2.1"
     model = "meta-llama/codellama-34b-instruct"
     model = "openai/gpt-4"
-    model = "jondurbin/airoboros-l2-70b-2.1"
-    bot = Bot(_id=1,name="rocket_logic", model=model, rank=1, max_tokens=2000)
+    model = "gryphe/mythomax-l2-13b"
+    bot = Bot(_id=1,name="rocket_logic", model=model, rank=1, max_tokens=5000)
     convo = Conversation(_id = 1, user=user, bot=bot)
 
     convo_widget = ConversationWidget(convo)

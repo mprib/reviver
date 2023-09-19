@@ -31,7 +31,7 @@ def test_user_creation_and_load():
 
     assert(key_toml.exists())
 
-    user.key_location = str(key_toml)
+    user.dot_env_loc = str(key_toml)
     assert(user.keys == keys)
     
     archive = Archive(test_dir)

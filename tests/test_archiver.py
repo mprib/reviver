@@ -53,7 +53,7 @@ def test_bot_id_list():
     assert(id_list == [1,2]) 
     
 def test_user_store_retrieve():
-    user = User(name= "UserName", key_location="")
+    user = User(name= "UserName", dot_env_loc="")
      
     test_dir = Path(ROOT, "tests", "working_delete")
     delete_directory_contents(test_dir)

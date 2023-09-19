@@ -15,20 +15,20 @@ log = reviver.log.get(__name__)
 @dataclass
 class User:
     name:str
-    key_location:str|Path = None # on initial load, no key location yet
+    dot_env_loc:str|Path = None # on initial load, no key location yet
 
     def __post_init__(self):
         # enforce string
         log.info("Ensuring key location stored as string.")
-        self.key_location = str(self.key_location)
+        self.dot_env_loc = str(self.dot_env_loc)
         
     @property
     def keys(self)->dict[str:str]:
         "load target toml file and return dictionary of keys"
-        if Path(self.key_location).exists():
+        if Path(self.dot_env_loc).exists():
             try:
 
-                keys = rtoml.load(Path(self.key_location))
+                keys = rtoml.load(Path(self.dot_env_loc))
 
             except rtoml.TomlParsingError as e:
                 log.warn(f"keypath not valid. Error encountered of type: {type(e).__name__}")        

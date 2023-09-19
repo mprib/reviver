@@ -2,7 +2,7 @@ BEGIN TRANSACTION;
 
 CREATE TABLE IF NOT EXISTS user (
     name TEXT PRIMARY KEY NOT NULL,
-    key_location TEXT
+    dot_env_loc TEXT
 );
 
 CREATE TABLE IF NOT EXISTS bots (

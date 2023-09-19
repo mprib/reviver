@@ -18,7 +18,7 @@ def test_session_creation():
 
     
     key_location=Path(ROOT, "keys.toml")
-    user = User(name="Me The User", key_location=key_location)
+    user = User(name="Me The User", dot_env_loc=key_location)
     log.info(user.keys)
 
     log.info(user.keys)
