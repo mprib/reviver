@@ -38,7 +38,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
 
     def connect_widgets(self):
-        self.menu.action_archive.triggered.connect(self.create_new_archive)
+        self.menu.action_new.triggered.connect(self.create_new_archive)
 
 
     def create_new_archive(self):
@@ -67,10 +67,13 @@ class MainMenus(QMenuBar):
         self.view_menu = self.addMenu("&View")
 
         # File Menu
-        self.action_archive = QAction("Create or Open &Archive", self)
-        self.file_menu.addAction(self.action_archive)
+        self.action_new = QAction("&New Archive", self)
+        self.file_menu.addAction(self.action_new)
+
+        self.action_open = QAction("&Open Archive", self)
+        self.file_menu.addAction(self.action_open)
         
-        self.action_open_recent = QAction("Open &Recent Archive", self)
+        self.action_open_recent = QAction("&Recents", self)
         self.file_menu.addAction(self.action_open_recent)
 
         # View Menu
