@@ -18,7 +18,7 @@ log.info(f"Spinning up reviver in {USER_DIR}")
 archive_dir = Path(USER_DIR, "reviver")
 archive = Archive(archive_dir)
 keys_toml = Path(archive_dir,"keys.toml")
-user = User(name="Mac", key_location=keys_toml)
+user = User(name="Mac", dot_env_loc=keys_toml)
 archive.store_user(user)
 
 user = archive.get_user()

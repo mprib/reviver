@@ -6,6 +6,7 @@ from reviver.bot import Bot
 from reviver.user import User
 from queue import Queue
 from threading import Thread
+import time
 import sys
 from reviver.gui.markdown_conversion import style_code_blocks, CONTENT_CSS
 import markdown
@@ -198,7 +199,9 @@ class Conversation:
                         new_word = delta["content"]
                         reply += new_word
                         new_message.content = reply
+                        time.sleep(.05)
                         self.qt_signal.new_styled_message.emit(new_message)
+                        # log.info(f"{new_message.content}")
                         # self.qt_signal.new_plain_message.emit(new_message)
 
             new_message.content = reply 
