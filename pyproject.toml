@@ -17,6 +17,7 @@ pyaudio = "^0.2.13" # note on linux had to run `sudo apt-get install portaudio19
 markdown = "^3.4.4"
 pyside6 = "^6.5.2"
 beautifulsoup4 = "^4.12.2"
+python-dotenv = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.7.0"
