@@ -2,10 +2,7 @@ from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout,QGridLayout, QL
 from dotenv import load_dotenv, set_key
 from os import getenv, path
 from pathlib import Path
-from reviver import APP_DIR
 import sys
-
-ENV_LOCATION = Path(APP_DIR, ".env")
 
 class ApiKeyWidget(QWidget):
     def __init__(self, env_location:Path):
@@ -81,6 +78,7 @@ if __name__ == '__main__':
 
     archive_dir = Path(Path.home(), "reviver")
     env_location = Path(archive_dir,".env")
+    load_dotenv(dotenv_path=env_location)
 
     app = QApplication(sys.argv)
 

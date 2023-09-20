@@ -66,16 +66,20 @@ class ConversationWidget(QWidget):
         
 if __name__=="__main__":
     
+    import dotenv
+    key_location=Path(ROOT, ".env")
+    dotenv.load_dotenv(key_location)
+
     app = QApplication([])
 
-    key_location=Path(ROOT, "keys.toml")
     user = User(name="Me The User", dot_env_loc=key_location)
 
     log.info(user.keys)
     model = "jondurbin/airoboros-l2-70b-2.1"
     model = "meta-llama/codellama-34b-instruct"
-    model = "openai/gpt-4"
     model = "gryphe/mythomax-l2-13b"
+    model = "openai/gpt-4"
+    model = "openai/gpt-3.5-turbo-0301"
     bot = Bot(_id=1,name="rocket_logic", model=model, rank=1, max_tokens=5000)
     convo = Conversation(_id = 1, user=user, bot=bot)
 
