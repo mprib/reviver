@@ -16,7 +16,14 @@ Things that I would like to have in an interface for LLMs:
 - tracking of current active context length with presentation of approximate costs per message as conversation expands...
 
 - have a project directory view for a given conversation and check/uncheck boxes to include them in the context of the conversation.
-- 
+
+
+Some other notes about intended direction....
+
+The open router keys are the only ones being used for interfacing with ChatBots
+
+The OpenAI key is planned to be used for Whisper speech-to-text integration...
+
 # License
 
 This package is licensed under the permissive MIT license. Have at it if you like. Please note that it is uses--though does not modify--PySide6 which is licensed under [LGPL](https://www.gnu.org/licenses/lgpl-3.0.en.html). 
