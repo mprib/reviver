@@ -11,6 +11,7 @@ import sys
 from reviver.gui.markdown_conversion import style_code_blocks, CONTENT_CSS
 import markdown
 from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QMessageBox
 from os import getenv
 
 log = reviver.log.get(__name__)
@@ -173,47 +174,74 @@ class Conversation:
             }
 
             log.info(f"pinging server with message: {self.messages[self.message_count]}")
-            response_stream = openai.ChatCompletion.create(
-                    model=self.bot.model, 
-                    messages=self.messages_prompt,
-                    headers=headers,
-                    temperature = self.bot.temperature,
-                    max_tokens = self.bot.max_tokens,
-                    top_p=self.bot.top_p,
-                    frequency_penalty=self.bot.frequency_penalty,
-                    presence_penalty=self.bot.presence_penalty,
-                    stream=True
-                )
+            
+            # this ends up being a rather large block of code in the try...
+            # I acknowledge that and I'm prepared to leave it for now...
+            try:
+                response_stream = openai.ChatCompletion.create(
+                        model=self.bot.model, 
+                        messages=self.messages_prompt,
+                        headers=headers,
+                        temperature = self.bot.temperature,
+                        max_tokens = self.bot.max_tokens,
+                        top_p=self.bot.top_p,
+                        frequency_penalty=self.bot.frequency_penalty,
+                        presence_penalty=self.bot.presence_penalty,
+                        stream=True
+                    )
 
-            # create a new empty message
-            new_message = Message(conversation_id=self._id, role="assistant", content="")
-            self.add_message(new_message)
+                # create a new empty message
+                new_message = Message(conversation_id=self._id, role="assistant", content="")
+                self.add_message(new_message)
 
-            reply = ""
-            response_count = 0
-            for response in response_stream:
-                response_count +=1  
-                if hasattr(response, "choices"):
-                    delta = response.choices[0]["delta"]
-                    if delta != {}:
-                        new_word = delta["content"]
-                        reply += new_word
-                        new_message.content = reply
-                        time.sleep(.05)
-                        self.qt_signal.new_styled_message.emit(new_message)
-                        # log.info(f"{new_message.content}")
-                        # self.qt_signal.new_plain_message.emit(new_message)
+                reply = ""
+                response_count = 0
+                for response in response_stream:
+                    response_count +=1  
+                    if hasattr(response, "choices"):
+                        delta = response.choices[0]["delta"]
+                        if delta != {}:
+                            new_word = delta["content"]
+                            reply += new_word
+                            new_message.content = reply
+                            time.sleep(.05)
+                            self.qt_signal.new_styled_message.emit(new_message)
+                            # log.info(f"{new_message.content}")
+                            # self.qt_signal.new_plain_message.emit(new_message)
 
-            new_message.content = reply 
-            log.info(f"New reply is {reply}")
-            self.qt_signal.new_styled_message.emit(new_message)
+                new_message.content = reply 
+                log.info(f"New reply is {reply}")
+                self.qt_signal.new_styled_message.emit(new_message)
 
-            # currently used primarily for testing...might be useful elsewhere
-            if out_q is not None:
-                out_q.put(new_message)
+                # currently used primarily for testing...might be useful elsewhere
+                if out_q is not None:
+                    out_q.put(new_message)
 
-            if response_count == 0:
-                log.info("No response")        
-
+                if response_count == 0:
+                    log.info("No response")        
+            # except PermissionError as e:
+            #     log.warn(f"Permission Error thrown: {e}")
+            #     error_message = str(e)  # Get the error message from the exception
+            #     # Create and show an error message box
+            #     error_box = QMessageBox()
+            #     error_box.setIcon(QMessageBox.Critical)
+            #     error_box.setWindowTitle("Error")
+            #     error_box.setText("An error occurred.")
+            #     error_box.setInformativeText(error_message)
+            #     error_box.show()
+            except Exception as e:
+                # unable to catch different errors here. not sure what's going on...
+                # this is not a good solution, but it will at least keep things from crashing.
+                # Handle PermissionError and InvalidRequestError exceptions
+                log.warn(f"Permission or Invalid Request Error thrown: {e}")
+                error_message = str(e)  # Get the error message from the exception
+                # Create and show an error message box
+                error_box = QMessageBox()
+                error_box.setIcon(QMessageBox.Critical)
+                error_box.setWindowTitle("Error")
+                error_box.setText("An error occurred.")
+                error_box.setInformativeText(error_message)
+                error_box.show()
+ 
         thread = Thread(target=worker,args=[],daemon=True )
         thread.start()
