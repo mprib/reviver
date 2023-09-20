@@ -1,17 +1,23 @@
+#%%
 import requests
 import re
+from dotenv import load_dotenv
 import reviver.log
-
-import polars as pl
-
-from keys import OPEN_ROUTER_API_KEY
+import pandas as pd
+from os import getenv
 import json
+from pathlib import Path
 log = reviver.log.get(__name__)
 
 class OpenRouterQueryHandler:
-    def __init__(self) -> None:
+    """
+    Interfaces with OpenRouter API to provide specs on currently available models
+    as well as the remaining balance on the provided key
+    
+    """
+    def __init__(self, API_KEY:str) -> None:
         self.headers = {
-            "Authorization": f"Bearer {OPEN_ROUTER_API_KEY}",
+            "Authorization": f"Bearer {API_KEY}",
         }
 
     def get_key_usage(self)->dict:
@@ -32,7 +38,7 @@ class OpenRouterQueryHandler:
 
         return key_data
 
-    def get_model_specs(self)->pl.DataFrame:
+    def get_model_specs(self)->pd.DataFrame:
         response = requests.get(
             "https://openrouter.ai/api/v1/models", headers=self.headers
         )
@@ -57,7 +63,7 @@ class OpenRouterQueryHandler:
                     merged_model_specs[key].append(None)
 
 
-        model_specs_reference = pl.DataFrame(merged_model_specs)
+        model_specs_reference = pd.DataFrame(merged_model_specs)
         return model_specs_reference
 
 
@@ -110,10 +116,18 @@ def get_all_keys(all_dicts: list[dict]) -> list[str]:
 
 if __name__ == "__main__":
     
-    query_handler = OpenRouterQueryHandler()
+    archive_dir = Path(Path.home(), "reviver")
+    env_location = Path(archive_dir,".env")
+    load_dotenv(dotenv_path=env_location)
+    key = getenv("OPEN_ROUTER_API_KEY")
+
+    query_handler = OpenRouterQueryHandler(key)
     
     key_usage = query_handler.get_key_usage()
     
     print(key_usage)
     model_specs =  query_handler.get_model_specs()
-    print(model_specs)
+
+    log.info(model_specs.to_csv())
+    model_specs
+

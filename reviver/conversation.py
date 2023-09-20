@@ -1,4 +1,6 @@
 import openai
+import os
+import pytest
 import reviver.log
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -11,7 +13,8 @@ import sys
 from reviver.gui.markdown_conversion import style_code_blocks, CONTENT_CSS
 import markdown
 from PySide6.QtCore import QObject, Signal
-
+from PySide6.QtWidgets import QMessageBox
+from os import getenv
 
 log = reviver.log.get(__name__)
 
@@ -164,7 +167,7 @@ class Conversation:
         def worker():
             # Set the base API URL and your OpenRouter API key
             openai.api_base = "https://openrouter.ai/api/v1"
-            openai.api_key = self.user.keys["OPEN_ROUTER_API_KEY"]
+            openai.api_key = getenv("OPEN_ROUTER_API_KEY")
 
             # Set the headers to identify your app
             headers = {
@@ -173,6 +176,9 @@ class Conversation:
             }
 
             log.info(f"pinging server with message: {self.messages[self.message_count]}")
+            
+            # this ends up being a rather large block of code in the try...
+            # I acknowledge that and I'm prepared to leave it for now...
             response_stream = openai.ChatCompletion.create(
                     model=self.bot.model, 
                     messages=self.messages_prompt,
@@ -215,5 +221,6 @@ class Conversation:
             if response_count == 0:
                 log.info("No response")        
 
+ 
         thread = Thread(target=worker,args=[],daemon=True )
         thread.start()
