@@ -1,5 +1,6 @@
 *keys.toml
 /dev/connect_to_openrouter copy.py
+/dev/conversation_widget copy.py
 *.wav
 tests/working_delete*
 
