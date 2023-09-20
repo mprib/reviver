@@ -11,7 +11,7 @@ import sys
 from reviver.gui.markdown_conversion import style_code_blocks, CONTENT_CSS
 import markdown
 from PySide6.QtCore import QObject, Signal
-
+from os import getenv
 
 log = reviver.log.get(__name__)
 
@@ -164,7 +164,7 @@ class Conversation:
         def worker():
             # Set the base API URL and your OpenRouter API key
             openai.api_base = "https://openrouter.ai/api/v1"
-            openai.api_key = self.user.keys["OPEN_ROUTER_API_KEY"]
+            openai.api_key = getenv("OPEN_ROUTER_API_KEY")
 
             # Set the headers to identify your app
             headers = {
