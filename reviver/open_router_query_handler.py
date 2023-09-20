@@ -10,6 +10,11 @@ from pathlib import Path
 log = reviver.log.get(__name__)
 
 class OpenRouterQueryHandler:
+    """
+    Interfaces with OpenRouter API to provide specs on currently available models
+    as well as the remaining balance on the provided key
+    
+    """
     def __init__(self, API_KEY:str) -> None:
         self.headers = {
             "Authorization": f"Bearer {API_KEY}",
