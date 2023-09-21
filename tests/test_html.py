@@ -41,11 +41,7 @@ This is something that I'm going to *emphasize*. I don't really know what to do 
 """
 def test_message_to_html():
     
-    # user = User(name="Me The User")
-    # bot = Bot(_id=1,name="friend", model="random", rank=1)
-    # convo = Conversation(_id = 1, user=user, bot=bot)
-    msg1 = Message(1, "user", content=content,position=1)
-    # msg2 = Message(2, "assistant", content=" This is some *stuff*",position=2)
+    msg1 = Message(role = "user", content=content)
 
     soup = BeautifulSoup(msg1.as_html(), 'html.parser')
     log.info(msg1.as_html())
@@ -56,11 +52,10 @@ def test_message_to_html():
 
 
 def test_conversation_to_html():
-    user = User(name="Me The User")
     bot = Bot(_id=1,name="friend", model="random", rank=1)
-    convo = Conversation(_id = 1, user=user, bot=bot)
-    msg1 = Message(1, "user", content=content,position=1)
-    msg2 = Message(2, "assistant", content=" This is some *stuff*",position=2)
+    convo = Conversation(_id = 1, bot=bot)
+    msg1 = Message(role = "user", content=content)
+    msg2 = Message(role = "assistant", content=" This is some *stuff*")
 
     convo.add_message(msg1)
     convo.add_message(msg2)
