@@ -1,8 +1,13 @@
-import reviver.log
+from bs4 import BeautifulSoup
+from pygments import highlight
+from pygments.lexers import get_lexer_by_name, guess_lexer
+from pygments.formatters import HtmlFormatter
+from reviver import ROOT
+from pathlib import Path
 from dataclasses import dataclass
 from datetime import datetime
-from reviver.gui.markdown_conversion import style_code_blocks
 import markdown
+import reviver.log
 
 log = reviver.log.get(__name__)
 
@@ -47,9 +52,6 @@ class Message:
         """
         return len(self.content)/4
 
-    # @property
-    # def chat_bubble(self):
-    #    return {"role":self.role, "content":self.content} 
 
     @property
     def time_as_datetime(self):
@@ -63,11 +65,7 @@ class Message:
         return html_version
         
     def as_styled_html(self):
-        styled_html=""
-        if self.role == "assistant":
-            styled_html+= "<div class='bot_name' <p> bot </p></div>"
-        
-        styled_html += f"""<div id='{self._id}' class='message {self.role}'>
+        styled_html = f"""<div id='{self._id}' class='message {self.role}'>
                             {"<p>SYSTEM PROMPT</p>" if self.role == "system" else ""}
                             {self.as_html()}
                         </div>
@@ -75,3 +73,38 @@ class Message:
         styled_html = style_code_blocks(styled_html)
 
         return styled_html
+
+
+with open(Path(ROOT, "reviver", "gui", "conversation.css")) as f:
+    CONTENT_CSS = f.read()
+
+def style_code_blocks(html)->str:
+    soup = BeautifulSoup(html, 'html.parser')
+
+    formatter = HtmlFormatter(style='monokai', full=False, cssstyles='overflow:auto;')
+
+    code_css = formatter.get_style_defs('.highlight')
+
+    for block in soup.find_all('code'):
+        
+        if block.parent.name == "pre": # full code block
+            language = block.get('class', [None])[0]
+            code = block.string
+            if language is not None:
+                language = language[9:]  # remove 'language-' prefix
+                lexer = get_lexer_by_name(language)
+            else:
+
+                try:
+                    lexer = guess_lexer(code)
+                except Exception as e:
+                    log.warn(f"New exception {e}") 
+                    lexer = get_lexer_by_name('python')  # default to python if guess fails 
+
+            highlighted_code = highlight(code, lexer, formatter)
+            block.string.replace_with(BeautifulSoup(highlighted_code, 'html.parser'))
+        else:
+          # inline code 
+          block['style'] = 'font-family: monospace;'
+          
+    return f'<style>{code_css}</style>' + str(soup)
