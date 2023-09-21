@@ -1,5 +1,4 @@
 
-from markdown import markdown
 from bs4 import BeautifulSoup
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name, guess_lexer
@@ -41,6 +40,4 @@ def style_code_blocks(html)->str:
           # inline code 
           block['style'] = 'font-family: monospace;'
           
-    # Add the CSS to the beginning of the HTML string
-    # return f'{CONTENT_CSS}<style>{code_css}</style>' + str(soup)
     return f'<style>{code_css}</style>' + str(soup)
