@@ -46,8 +46,6 @@ class ConversationWidget(QWidget):
         
     def add_styled_message_to_webview(self, msg:Message):
         # Add a new message to the end of the conversation
-        # styled_html = msg.backtic_complete_content
-        # styled_html = json.dumps(styled_html)
         styled_html = msg.as_styled_html()
         js_code = f'''
         var element = document.getElementById('{msg._id}');
@@ -76,12 +74,10 @@ if __name__=="__main__":
 
     log.info(user.keys)
     # return f'{CONTENT_CSS}<style>{code_css}</style>' + str(soup)
-    model = "jondurbin/airoboros-l2-70b-2.1"
-    model = "meta-llama/codellama-34b-instruct"
-    model = "gryphe/mythomax-l2-13b"
     model = "openai/gpt-4"
     model = "openai/gpt-3.5-turbo-0301"
-    bot = Bot(_id=1,name="rocket_logic", model=model, rank=1, max_tokens=5000)
+    model = "meta-llama/codellama-34b-instruct"
+    bot = Bot(_id=1,name="rocket_logic", model=model, rank=1, max_tokens=1000)
     convo = Conversation(_id = 1, bot=bot)
 
     convo_widget = ConversationWidget(convo)
