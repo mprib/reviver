@@ -9,12 +9,15 @@ log = reviver.log.get(__name__)
 @dataclass(slots=True, frozen=False) # not frozen because content of message is built up iteratively
 class Message:
     """
-    
+    The bulk of this class is dedicated to processing the core data to be formatted appropriately in the webview widget
     """
     role: str
     content: str
-    time: str = str(datetime.now())
+    time: str = None
 
+    def __post_init__(self):
+        self.time = datetime.now()
+        
     @property
     def backtic_complete_content(self) -> str:
         """
@@ -33,7 +36,8 @@ class Message:
         """
         Used to identify specific message divisions in conversation widget's webview html 
         """
-        return f"message-{self.time}"
+        _id = f"message-{self.time}"
+        return _id
         
     @property
     def token_size(self):
@@ -43,9 +47,9 @@ class Message:
         """
         return len(self.content)/4
 
-    @property
-    def chat_bubble(self):
-       return {"role":self.role, "content":self.content} 
+    # @property
+    # def chat_bubble(self):
+    #    return {"role":self.role, "content":self.content} 
 
     @property
     def time_as_datetime(self):
