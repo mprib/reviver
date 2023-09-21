@@ -200,15 +200,21 @@ class Conversation:
             for response in response_stream:
                 response_count +=1  
                 if hasattr(response, "choices"):
-                    delta = response.choices[0]["delta"]
-                    if delta != {}:
-                        new_word = delta["content"]
+                    if "delta" in response.choices[0].keys():
+                    # delta = response.choices[0]["delta"]
+                    # if delta != {}:
+                        new_word = response.choices[0]["delta"]["content"]
                         reply += new_word
                         new_message.content = reply
                         time.sleep(.05)
                         self.qt_signal.new_styled_message.emit(new_message)
-                        # log.info(f"{new_message.content}")
-                        # self.qt_signal.new_plain_message.emit(new_message)
+
+                    if "text" in response.choices[0].keys():
+                        new_word =response.choices[0]["text"]
+                        reply += new_word
+                        new_message.content = reply
+                        time.sleep(.05)
+                        self.qt_signal.new_styled_message.emit(new_message)
 
             new_message.content = reply 
             log.info(f"New reply is {reply}")
