@@ -66,7 +66,7 @@ def test_user_store_retrieve():
     
     
 def test_message_store_retrieve():
-    msg = Message(conversation_id=1,position=1, role="user",content= "hello world!")
+    msg = Message(role="user",content= "hello world!")
 
     archive = get_new_test_archiver()
     archive.store_message(msg)
@@ -75,8 +75,8 @@ def test_message_store_retrieve():
     
     
 def test_messages_store_retrieve():
-    msg1 = Message(conversation_id=1,position=1, role="user",content= "hello world!")
-    msg2 = Message(conversation_id=1,position=2, role="assistant",content= "sup?")
+    msg1 = Message(role="user",content= "hello world!")
+    msg2 = Message(role="assistant",content= "sup?")
 
     messages = {msg1.position:msg1, msg2.position:msg2}
 

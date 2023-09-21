@@ -1,6 +1,4 @@
 
-#%%
-
 from reviver.models_data import ModelSpecSheet
 from dotenv import load_dotenv
 from reviver import ROOT
@@ -10,7 +8,6 @@ import reviver.log
 
 log = reviver.log.get(__name__)
 
-from reviver.open_router_query_handler import OpenRouterQueryHandler
 
 def test_models():
     

@@ -1,87 +1,16 @@
 import openai
-import os
-import pytest
 import reviver.log
 from dataclasses import dataclass, field
-from datetime import datetime
 from reviver.bot import Bot
-from reviver.user import User
 from queue import Queue
 from threading import Thread
 import time
-import sys
-from reviver.gui.markdown_conversion import style_code_blocks, CONTENT_CSS
-import markdown
+from reviver.message import CONTENT_CSS
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QMessageBox
 from os import getenv
+from reviver.message import Message
 
 log = reviver.log.get(__name__)
-
-@dataclass
-class Message:
-    conversation_id:int
-    role: str
-    content: str
-    position:int = None
-    time: str = str(datetime.now())
-
-    @property
-    def backtic_complete_content(self) -> str:
-        """
-        Used to make sure that the stylized html will render python correctly when it is in the middle
-        of being drafted by the bot.
-        """
-        # check if the content has an odd number of triple backticks
-        if self.content.count('```') % 2 != 0:
-            # if so, append a set of triple backticks to the end
-            return self.content + '\n```'
-        else:
-            return self.content
-
-    @property
-    def _id(self):
-        """
-        Used to identify specific message divisions in conversation widget's webview html 
-        """
-        return f"message-{self.conversation_id}-{self.position}"
-        
-    @property
-    def token_size(self):
-        """
-        Token size is a generalization based on the rule that 1 token ~= 4 characters:
-        https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them
-        """
-        return len(self.content)/4
-
-    @property
-    def chat_bubble(self):
-       return {"role":self.role, "content":self.content} 
-
-    @property
-    def time_as_datetime(self):
-        format = f"%Y-%m-%d %H:%M:%S.%f"
-        t = datetime.strptime(self.time, format)
-        return t
-
-    def as_html(self):
-        # html_version = markdown.markdown(self.content, extensions=['fenced_code'])
-        html_version = markdown.markdown(self.backtic_complete_content, extensions=['fenced_code'])
-        return html_version
-        
-    def as_styled_html(self):
-        styled_html=""
-        if self.role == "assistant":
-            styled_html+= f"<div class='bot_name' <p> bot </p></div>"
-        
-        styled_html += f"""<div id='{self._id}' class='message {self.role}'>
-                            {"<p>SYSTEM PROMPT</p>" if self.role == "system" else ""}
-                            {self.as_html()}
-                        </div>
-                        """
-        styled_html = style_code_blocks(styled_html)
-
-        return styled_html
 
 class QtSignaler(QObject):
     """
@@ -93,33 +22,18 @@ class QtSignaler(QObject):
 @dataclass(frozen=False, slots=True)
 class Conversation:
     _id: int
-    user: User
     bot: Bot 
     title: str = "untitled"
     messages: dict= field(default_factory=dict[int, Message])
     qt_signal:QtSignaler = QtSignaler()
 
-    def get_writer_name(self, role:str)->str:
-        match role:
-            case "user":
-                return self.user.name
-            case "assistant":
-                return self.bot.name
-            case "system":
-                return "system"
 
     def __post_init__(self):
-        prompt_message = Message(conversation_id=self._id,
-                                 position=0,
-                                 role = "system",
-                                 content=self.bot.system_prompt
-                                 )
+        prompt_message = Message(role = "system", content=self.bot.system_prompt)
         self.messages[0] = prompt_message
         
     def add_message(self, msg:Message)->None:
-        next_position = self.message_count+1
-        msg.position = next_position
-        self.messages[next_position] = msg
+        self.messages[self.message_count+1] = msg
         self.qt_signal.new_styled_message.emit(msg)        
 
     @property
@@ -134,10 +48,11 @@ class Conversation:
         This will return the conversation data in the format that is expected by the model
         """
 
-        msgs_for_load = [] 
+        message_history = [] 
         for index, msg in self.messages.items():
-            msgs_for_load.append(msg.chat_bubble)
-        return msgs_for_load
+            role_content = {"role":msg.role, "content":msg.content}
+            message_history.append(role_content)
+        return message_history
 
     @property
     def token_size(self):
@@ -192,7 +107,7 @@ class Conversation:
                 )
 
             # create a new empty message
-            new_message = Message(conversation_id=self._id, role="assistant", content="")
+            new_message = Message(role="assistant", content="")
             self.add_message(new_message)
 
             reply = ""
@@ -201,14 +116,15 @@ class Conversation:
                 response_count +=1  
                 if hasattr(response, "choices"):
                     if "delta" in response.choices[0].keys():
-                    # delta = response.choices[0]["delta"]
-                    # if delta != {}:
-                        new_word = response.choices[0]["delta"]["content"]
-                        reply += new_word
-                        new_message.content = reply
-                        time.sleep(.05)
-                        self.qt_signal.new_styled_message.emit(new_message)
+                        delta = response.choices[0]["delta"]
+                        if delta != {}:
+                            new_word = response.choices[0]["delta"]["content"]
+                            reply += new_word
+                            new_message.content = reply
+                            time.sleep(.05)
+                            self.qt_signal.new_styled_message.emit(new_message)
 
+                    # the below is a quick-and-dirty solution to incorporate the weird output of gpt turbo instruct
                     if "text" in response.choices[0].keys():
                         new_word =response.choices[0]["text"]
                         reply += new_word
