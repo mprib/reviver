@@ -5,7 +5,7 @@ from reviver.bot import Bot
 from queue import Queue
 from threading import Thread
 import time
-from reviver.gui.markdown_conversion import CONTENT_CSS
+from reviver.message import CONTENT_CSS
 from PySide6.QtCore import QObject, Signal
 from os import getenv
 from reviver.message import Message
