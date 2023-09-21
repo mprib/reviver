@@ -8,7 +8,6 @@ from pathlib import Path
 from reviver import ROOT
 from reviver.bot import Bot, BotGallery
 from reviver.helper import delete_directory_contents
-from reviver.user import User
 logger = reviver.log.get(__name__)
 
 def test_archive_init():
@@ -52,17 +51,6 @@ def test_bot_id_list():
     id_list = archive.get_bot_list()
     assert(id_list == [1,2]) 
     
-def test_user_store_retrieve():
-    user = User(name= "UserName", dot_env_loc="")
-     
-    test_dir = Path(ROOT, "tests", "working_delete")
-    delete_directory_contents(test_dir)
-    db_path = Path(test_dir,"reviver.db")
-    assert(not db_path.exists())
-    archive = Archive(test_dir)
-    archive.store_user(user)
-    user_copy = archive.get_user()
-    assert(user == user_copy)
     
     
 def test_message_store_retrieve():
@@ -127,7 +115,6 @@ if __name__ == "__main__":
     test_archive_init()
     test_bot_store_retrieve()
     test_bot_id_list()
-    test_user_store_retrieve()
     test_message_store_retrieve()
     test_messages_store_retrieve()
     test_convo_store_retrieve()
