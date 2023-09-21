@@ -1,6 +1,5 @@
 from reviver.conversation import Message, Conversation
 from reviver.bot import Bot
-from reviver.user import User
 import reviver.log
 from bs4 import BeautifulSoup
 

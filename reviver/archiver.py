@@ -5,7 +5,6 @@ from pathlib import Path
 from reviver.conversation import Conversation, Message
 
 from reviver.bot import Bot, BotGallery
-from reviver.user import User
 
 import sqlite3
 from reviver import SCHEMA_SQL
@@ -110,46 +109,6 @@ class Archive:
 
         return bot
 
-    def store_user(self, user: User) -> None:
-        user_data = asdict(user)
-        columns = []
-        bindings = {}
-        for key, value in user_data.items():
-            columns.append(key)
-            bindings[key] = value
-
-        sql = f"""
-            INSERT OR REPLACE INTO 
-            user
-            ({", ".join(columns)})
-            VALUES 
-            ({", ".join(':' + name for name in columns)})
-            """
-
-        connection = self.get_connection()
-        cursor = connection.cursor()
-        logger.info(f"Storing user data: {bindings}")
-        cursor.execute(sql, bindings)
-        connection.commit()
-        connection.close()
-
-    def get_user(self) -> User:
-        """
-        Current data schema only has one user....
-        """
-
-        sql = """
-        SELECT * from user
-        """
-        conn = self.get_connection()
-        cursor = conn.cursor()
-
-        rows = cursor.execute(sql).fetchall()
-        column_names = [description[0] for description in cursor.description]
-        user_data = {name: value for name, value in zip(column_names, rows[0])}
-        user = User(**user_data)
-        conn.close()
-        return user
 
     def get_messages(self, conversation_id: int) -> dict[int, Message]:
         # need to get all message positions first
@@ -258,7 +217,7 @@ class Archive:
         connection.close()
 
     def get_conversation(
-        self, convo_id, bot_gallery: BotGallery, user: User
+        self, convo_id, bot_gallery: BotGallery
     ) -> Conversation:
         sql = """
             SELECT * FROM conversations WHERE _id = :_id        
@@ -280,6 +239,6 @@ class Archive:
 
         bot = bot_gallery.get_bot(bot_id)
         convo = Conversation(
-            _id=convo_id, user=user, bot=bot, title=title, messages=messages
+            _id=convo_id, bot=bot, title=title, messages=messages
         )
         return convo

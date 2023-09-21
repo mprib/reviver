@@ -16,7 +16,6 @@ class Session:
         
         # load archive if it exists; otherwise creates it
         self.archive = Archive(self.archive_dir)
-        self.user = self.archive.get_user()
 
         self.active_conversations = {}
         self.bot_gallery = self.archive.get_bot_gallery()
