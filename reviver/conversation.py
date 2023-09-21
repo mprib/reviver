@@ -2,7 +2,6 @@ import openai
 import reviver.log
 from dataclasses import dataclass, field
 from reviver.bot import Bot
-from reviver.user import User
 from queue import Queue
 from threading import Thread
 import time
@@ -51,7 +50,8 @@ class Conversation:
 
         message_history = [] 
         for index, msg in self.messages.items():
-            message_history.append(msg.chat_bubble)
+            role_content = {"role":msg.role, "content":msg.content}
+            message_history.append(role_content)
         return message_history
 
     @property
