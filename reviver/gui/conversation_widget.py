@@ -38,7 +38,7 @@ class ConversationWidget(QWidget):
     def create_user_message(self):
         log.info(f"Sending: {self.text_entry.toPlainText()}")
         # self.text_entry.setEnabled(False)
-        new_message  = Message(self.conversation._id, role= "user", content=self.text_entry.toPlainText())
+        new_message  = Message(role= "user", content=self.text_entry.toPlainText())
         self.text_entry.clear() # no longer needed now that message is created
         self.conversation.add_message(new_message)
         self.conversation.generate_next_message()
@@ -75,13 +75,14 @@ if __name__=="__main__":
     user = User(name="Me The User", dot_env_loc=key_location)
 
     log.info(user.keys)
+    # return f'{CONTENT_CSS}<style>{code_css}</style>' + str(soup)
     model = "jondurbin/airoboros-l2-70b-2.1"
     model = "meta-llama/codellama-34b-instruct"
     model = "gryphe/mythomax-l2-13b"
     model = "openai/gpt-4"
     model = "openai/gpt-3.5-turbo-0301"
     bot = Bot(_id=1,name="rocket_logic", model=model, rank=1, max_tokens=5000)
-    convo = Conversation(_id = 1, user=user, bot=bot)
+    convo = Conversation(_id = 1, bot=bot)
 
     convo_widget = ConversationWidget(convo)
 
