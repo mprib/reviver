@@ -25,9 +25,3 @@ else:
     REVIVER_SETTINGS = {"recent_archives":[]} 
 
 LOG_PATH = Path(APP_DIR, "log.txt")
-
-# load database schema
-# this is the foundation of any new user database
-schema_path = Path(ROOT, "reviver", "schema.sql")
-with open(str(schema_path), 'r') as sql_file:
-    SCHEMA_SQL= sql_file.read()
