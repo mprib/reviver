@@ -5,10 +5,9 @@ log = reviver.log.get(__name__)
 
 
 
-@dataclass
+@dataclass(slots=True)
 class Bot:
      
-    _id:int  
     name:str # must be unique among all bots in user's profile
     model: str 
     rank:int # used for ordering bot in list
@@ -23,36 +22,28 @@ class Bot:
 
 @dataclass
 class BotGallery:
-    bots: dict = field(default_factory=dict[int, Bot])
+    bots: dict = field(default_factory=dict[str, Bot])
     
     def add_bot(self, bot:Bot):
-        self.bots[bot._id] = bot
+        self.bots[bot.name] = bot
     
     def create_new_bot(self, name:str, model:str):
         """
         Bot gallery is able to track bot_ids to make sure these
         are unique
         """
-        bot_id = self.get_max_id()+1
-
         # new bots are at the top of the heap
-        bot = Bot(bot_id,name,model, rank=1)
-        self.bots[bot_id] = bot
-    
-    def get_bot(self, bot_id:int)->Bot:
+        bot = Bot(name,model, rank=1)
         
-        return self.bots[bot_id]
-     
-    def get_max_id(self):
-        bot_ids = []
-        for bot_id, bot in self.bots.items():
-            bot_ids.append(bot_id)
+        for name, bot in self.bots.items():
+            bot.rank +=1       
 
-        if len(bot_ids)==0:
-            max_id = 0
-        else:
-            max_id = max(bot_ids)
-        return max_id
+        self.bots[bot.name] = bot
+    
+    def get_bot(self, bot_name:str)->Bot:
+        
+        return self.bots[bot_name]
+     
 
     
 
