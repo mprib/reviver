@@ -31,32 +31,19 @@ class Archive:
         with open(self.bot_path(bot.name), "w+") as f:
             rtoml.dump(bot_data,f)    
 
-    def get_bot_list(self):
-        """
-        returns a list of all bot ids stored in the database, including hidden ones
-        """
-        sql = """
-        SELECT _id from bots
-        """
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        rows = cursor.execute(sql).fetchall()
-        conn.close()
-        bot_ids = [row[0] for row in rows]
-
-        return bot_ids
 
     def store_bot_gallery(self, bot_gallery:BotGallery):
         for bot_id, bot in bot_gallery.bots.items():
             self.store_bot(bot)
+            
+    
         
-    def get_bot_gallery(self):
-        bot_list =self.get_bot_list()
-        log.info(f"Loading up bot list:{bot_list}")
+    def load_bot_gallery(self):
         bots = {}
-        for bot_id in bot_list:
-            bot = self.get_bot(bot_id)
-            bots[bot_id] = bot
+        for bot_toml in Path(self.reviver_dir, "bots").iterdir():
+            bot_name = bot_toml.stem
+            bot = self.get_bot(bot_name)
+            bots[bot_name] = bot
         
         bot_gallery = BotGallery(bots)
         return bot_gallery
