@@ -18,7 +18,7 @@ class Session:
         self.archive = Archive(self.archive_dir)
 
         self.active_conversations = {}
-        self.bot_gallery = self.archive.get_bot_gallery()
+        self.bot_gallery = self.archive.load_bot_gallery()
 
 
     def create_new_conversation(self, bot_id:int):
