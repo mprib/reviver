@@ -18,7 +18,7 @@ user = User(name="Me The User", dot_env_loc=key_location)
 
 log.info(user.keys)
 model = "jondurbin/airoboros-l2-70b-2.1"
-bot = Bot(_id=1,name="rocket_logic", model=model, rank=1)
+bot = Bot(name="rocket_logic", model=model, rank=1)
 convo = Conversation(_id = 1, user=user, bot=bot)
 
 def input_worker():

@@ -2,7 +2,7 @@
 The session will hold the primary objects that the GUI interact with. When provided with an data directory
 """
 from pathlib import Path
-from reviver.archiver import Archive
+from reviver.archive import Archive
 import reviver.log
 from reviver.bot import Bot, BotGallery
 log = reviver.log.get(__name__)
@@ -18,7 +18,7 @@ class Session:
         self.archive = Archive(self.archive_dir)
 
         self.active_conversations = {}
-        self.bot_gallery = self.archive.get_bot_gallery()
+        self.bot_gallery = self.archive.load_bot_gallery()
 
 
     def create_new_conversation(self, bot_id:int):

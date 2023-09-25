@@ -1,112 +1,57 @@
 import reviver.log
 from dataclasses import asdict
-
 from pathlib import Path
 from reviver.conversation import Conversation, Message
-
 from reviver.bot import Bot, BotGallery
+import rtoml
 
-import sqlite3
-from reviver import SCHEMA_SQL
 
-logger = reviver.log.get(__name__)
+log = reviver.log.get(__name__)
 
 
 class Archive:
+    """
+    Aims for simplicity in implementation/auditing/tweaking by storing all data in toml files
+    """
     def __init__(self, reviver_data_dir: Path) -> None:
         self.reviver_dir = reviver_data_dir
-        self.user_id = 1  # current way I'm thinking about it, but who knows?
-        self.get_connection()
+        self.bots_dir = Path(self.reviver_dir, "bots")
+        self.conversations_dir = Path(self.reviver_dir, "conversations")
 
-    def get_connection(self) -> sqlite3.Connection:
-        self.reviver_dir.mkdir(parents=True, exist_ok=True)
-
-        target_db = Path(self.reviver_dir, "reviver.db")
-
-        if target_db.exists():
-            conn = sqlite3.connect(target_db)
-            logger.info(f"Successfull connection to database at {target_db}")
-
-        else:
-            # need to initialize the database
-            logger.info(
-                "No previously existing database...initializing new db based on schema.sql"
-            )
-            conn = sqlite3.connect(target_db)
-            cursor = conn.cursor()
-            cursor.executescript(SCHEMA_SQL)
-
-        return conn
-
+        # check that appropriate directories exist
+        self.bots_dir.mkdir(parents=True, exist_ok=True)
+        self.conversations_dir.mkdir(parents=True, exist_ok=True)
+        
+    def bot_path(self, bot_name:str)->Path:
+        return Path(self.bots_dir, str(bot_name)+".toml")
+     
     def store_bot(self, bot: Bot) -> None:
         bot_data = asdict(bot)
-        columns = []
-        bindings = {}
-        for key, value in bot_data.items():
-            columns.append(key)
-            bindings[key] = value
+        log.info(f"Storing... {bot.name}")
+        with open(self.bot_path(bot.name), "w+") as f:
+            rtoml.dump(bot_data,f)    
 
-        sql = f"""
-            INSERT OR REPLACE INTO 
-            bots 
-            ({", ".join(columns)})
-            VALUES 
-            ({", ".join(':' + name for name in columns)})
-            """
-
-        connection = self.get_connection()
-        cursor = connection.cursor()
-        logger.info(f"Storing bot data: {bindings}")
-        cursor.execute(sql, bindings)
-        connection.commit()
-        connection.close()
-
-    def get_bot_list(self):
-        """
-        returns a list of all bot ids stored in the database, including hidden ones
-        """
-        sql = """
-        SELECT _id from bots
-        """
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        rows = cursor.execute(sql).fetchall()
-        conn.close()
-        bot_ids = [row[0] for row in rows]
-
-        return bot_ids
 
     def store_bot_gallery(self, bot_gallery:BotGallery):
-        
         for bot_id, bot in bot_gallery.bots.items():
             self.store_bot(bot)
+            
+    
         
-    def get_bot_gallery(self):
-
-        bot_list =self.get_bot_list()
-        logger.info(f"Loading up bot list:{bot_list}")
+    def load_bot_gallery(self):
         bots = {}
-        for bot_id in bot_list:
-            bot = self.get_bot(bot_id)
-            bots[bot_id] = bot
+        for bot_toml in Path(self.reviver_dir, "bots").iterdir():
+            bot_name = bot_toml.stem
+            bot = self.get_bot(bot_name)
+            bots[bot_name] = bot
         
         bot_gallery = BotGallery(bots)
         return bot_gallery
          
         
-    def get_bot(self, bot_id: int) -> Bot:
-        sql = """
-        SELECT * from bots WHERE _id = (:bot_id)
-        """
-        conn = self.get_connection()
-        cursor = conn.cursor()
-
-        results = cursor.execute(sql, {"bot_id": bot_id}).fetchall()
-        conn.close()
-        column_names = [description[0] for description in cursor.description]
-        bot_data = {name: value for name, value in zip(column_names, results[0])}
+    def get_bot(self, bot_name:str) -> Bot:
+        bot_data = rtoml.load(self.bot_path(bot_name))
         bot = Bot(**bot_data)
-
         return bot
 
 
@@ -121,7 +66,7 @@ class Archive:
 
         msg_positions = [position[0] for position in rows]
 
-        logger.info(f"Message positions are:{msg_positions}")
+        log.info(f"Message positions are:{msg_positions}")
 
         messages = {
             position: self.get_message(conversation_id, position)
@@ -148,7 +93,7 @@ class Archive:
 
         connection = self.get_connection()
         cursor = connection.cursor()
-        logger.info(f"Storing message data: {bindings}")
+        log.info(f"Storing message data: {bindings}")
         cursor.execute(sql, bindings)
         connection.commit()
         connection.close()
@@ -211,7 +156,7 @@ class Archive:
 
         connection = self.get_connection()
         cursor = connection.cursor()
-        logger.info(f"Storing conversation data: {bindings}")
+        log.info(f"Storing conversation data: {bindings}")
         cursor.execute(sql, bindings)
         connection.commit()
         connection.close()
@@ -225,7 +170,7 @@ class Archive:
         bindings = {"_id": convo_id}
         connection = self.get_connection()
         cursor = connection.cursor()
-        logger.info(f"Storing conversation data: {bindings}")
+        log.info(f"Storing conversation data: {bindings}")
         rows = cursor.execute(sql, bindings).fetchall()
         column_names = [description[0] for description in cursor.description]
         convo_data = {name: value for name, value in zip(column_names, rows[0])}

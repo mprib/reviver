@@ -3,7 +3,7 @@
 import reviver.log
 
 from reviver.conversation import Message, Conversation
-from reviver.archiver import Archive
+from reviver.archive import Archive
 from pathlib import Path
 from reviver import ROOT
 from reviver.bot import Bot, BotGallery
@@ -13,20 +13,23 @@ logger = reviver.log.get(__name__)
 def test_archive_init():
     test_dir = Path(ROOT, "tests", "working_delete")
     delete_directory_contents(test_dir)
-    logger.info("Confirming that db does not exist")
-    db_path = Path(test_dir,"reviver.db")
-    assert(not db_path.exists())
-    logger.info("Init archiver without db...")
-    archiver = Archive(test_dir)
+    logger.info("Confirming that directories do not exist")
+    
+    bots_dir = Path(test_dir, "bots")  
+    convo_dir = Path(test_dir, "conversations")
 
+    assert(not bots_dir.exists())
+    assert(not convo_dir.exists())
+
+    logger.info("Init archiver ...")
+    archiver = Archive(test_dir)
     logger.info("db should now exist...")
-    del archiver
-    assert(db_path.exists())
-    archiver_new = Archive(test_dir)
+    assert(bots_dir.exists())
+    assert(convo_dir.exists())
+
 
 def test_bot_store_retrieve():
-    bot1 = Bot(1,"first bot", model="llama_70b",rank=1)
-    # bot2 = Bot(2,"first bot", model="llama_70b",rank=2)
+    bot1 = Bot("first bot", model="llama_70b",rank=1)
 
     test_dir = Path(ROOT, "tests", "working_delete")
     delete_directory_contents(test_dir)
@@ -34,24 +37,24 @@ def test_bot_store_retrieve():
 
     archive.store_bot(bot1)
 
-    bot1_copy = archive.get_bot(1)
+    bot1_copy = archive.get_bot("first bot")
     assert(bot1 == bot1_copy) 
 
-def test_bot_id_list():
-    bot1 = Bot(1,"first bot", model="llama_70b",rank=1)
-    bot2 = Bot(2,"first bot", model="llama_70b",rank=2)
+def test_bot_gallery_store_retrieve():
+    bot1 = Bot("first bot", model="llama_70b",rank=1)
+    bot2 = Bot("second bot", model="llama_70b",rank=2)
 
     test_dir = Path(ROOT, "tests", "working_delete")
     delete_directory_contents(test_dir)
     archive = Archive(test_dir)
+    bots = {bot1.name:bot1,
+            bot2.name:bot2}
 
-    archive.store_bot(bot1)
-    archive.store_bot(bot2)
+    bot_gallery = BotGallery(bots)
+    archive.store_bot_gallery(bot_gallery)
+    bot_gallery_copy = archive.load_bot_gallery()
+    assert(bot_gallery==bot_gallery_copy)
 
-    id_list = archive.get_bot_list()
-    assert(id_list == [1,2]) 
-    
-    
     
 def test_message_store_retrieve():
     msg = Message(role="user",content= "hello world!")
@@ -89,15 +92,14 @@ def test_convo_store_retrieve():
     bot_gallery.add_bot(bot_1)
     bot_gallery.add_bot(bot_2)
     
-    user = User("TestUser", "C:/keys.toml")
-    convo = Conversation(1,user=user, bot=bot_1)
+    convo = Conversation(1, bot=bot_1)
 
     convo.add_message(msg1)
     convo.add_message(msg2)
 
     archive = get_new_test_archiver()
     archive.store_conversation(convo)
-    convo_copy = archive.get_conversation(convo_id=1,user=user, bot_gallery=bot_gallery) 
+    convo_copy = archive.get_conversation(convo_id=1, bot_gallery=bot_gallery) 
     logger.info("Confirm that saved and reloaded convo is same as original")
     assert(convo==convo_copy)
 
@@ -114,8 +116,8 @@ if __name__ == "__main__":
     
     test_archive_init()
     test_bot_store_retrieve()
-    test_bot_id_list()
-    test_message_store_retrieve()
-    test_messages_store_retrieve()
-    test_convo_store_retrieve()
+    test_bot_gallery_store_retrieve()
+    # test_message_store_retrieve()
+    # test_messages_store_retrieve()
+    # test_convo_store_retrieve()
 
