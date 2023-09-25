@@ -1,5 +1,5 @@
 
-from reviver.archiver import Archive
+from reviver.archive import Archive
 from pathlib import Path
 from reviver import ROOT
 from reviver.bot import Bot
