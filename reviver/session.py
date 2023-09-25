@@ -2,7 +2,7 @@
 The session will hold the primary objects that the GUI interact with. When provided with an data directory
 """
 from pathlib import Path
-from reviver.archiver import Archive
+from reviver.archive import Archive
 import reviver.log
 from reviver.bot import Bot, BotGallery
 log = reviver.log.get(__name__)
