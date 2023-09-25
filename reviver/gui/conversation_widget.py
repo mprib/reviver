@@ -77,7 +77,7 @@ if __name__=="__main__":
     model = "openai/gpt-4"
     model = "openai/gpt-3.5-turbo-0301"
     model = "meta-llama/codellama-34b-instruct"
-    bot = Bot(_id=1,name="rocket_logic", model=model, rank=1, max_tokens=1000)
+    bot = Bot(name="rocket_logic", model=model, rank=1, max_tokens=1000)
     convo = Conversation(_id = 1, bot=bot)
 
     convo_widget = ConversationWidget(convo)

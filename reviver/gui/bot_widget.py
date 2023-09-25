@@ -174,7 +174,7 @@ class BotWidget(QWidget):
         
         
 if __name__ == "__main__":
-    bot = Bot(_id=1,name="",model=None,rank=5, hidden=False)
+    bot = Bot(_name="",model=None,rank=5, hidden=False)
     app = QApplication()
     bot_widget = BotWidget(bot=bot)
     bot_widget.show()

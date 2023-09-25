@@ -51,7 +51,7 @@ def test_message_to_html():
 
 
 def test_conversation_to_html():
-    bot = Bot(_id=1,name="friend", model="random", rank=1)
+    bot = Bot(name="friend", model="random", rank=1)
     convo = Conversation(_id = 1, bot=bot)
     msg1 = Message(role = "user", content=content)
     msg2 = Message(role = "assistant", content=" This is some *stuff*")

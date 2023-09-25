@@ -16,7 +16,7 @@ def test_session_creation():
 
     
     model = "jondurbin/airoboros-l2-70b-2.1"
-    bot = Bot(_id=1,name="rocket_logic", model=model, rank=1)
+    bot = Bot(name="rocket_logic", model=model, rank=1)
     
     archive = Archive(test_dir)
 
