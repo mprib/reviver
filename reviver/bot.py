@@ -27,7 +27,7 @@ class BotGallery:
     def add_bot(self, bot:Bot):
         self.bots[bot.name] = bot
     
-    def create_new_bot(self, name:str, model:str):
+    def create_new_bot(self, name:str, model:str=None):
         """
         Bot gallery is able to track bot_ids to make sure these
         are unique
@@ -35,16 +35,45 @@ class BotGallery:
         # new bots are at the top of the heap
         bot = Bot(name,model, rank=1)
         
-        for name, bot in self.bots.items():
-            bot.rank +=1       
+        for name, bt in self.bots.items():
+            bt.rank +=1       
 
         self.bots[bot.name] = bot
-    
+        
+        log.info(f"bot added:{name}")
+
     def get_bot(self, bot_name:str)->Bot:
         
         return self.bots[bot_name]
-     
 
     
+    def lower_rank(self,bot:Bot):
+        swap_bot = self.get_bot_by_rank(bot.rank+1)        
+        if swap_bot is not None:
+            bot.rank, swap_bot.rank = swap_bot.rank, bot.rank
+            log.info(f"Bot {bot.name} is now of rank {bot.rank}")
+        else:
+            log.info(f"No bot to swap with") 
 
-                
+    def raise_rank(self,bot:Bot):
+        swap_bot = self.get_bot_by_rank(bot.rank-1)        
+        if swap_bot is not None:
+            bot.rank, swap_bot.rank = swap_bot.rank, bot.rank
+            log.info(f"Bot {bot.name} is now of rank {bot.rank}")
+        else:
+            log.info(f"No bot to swap with") 
+
+    def get_bot_by_rank(self, rank:int)->Bot:
+        
+        for name, bot in self.bots.items():
+            if bot.rank==rank:
+                log.info(f"bot with rank {rank} is {bot.name}")
+                return bot
+        
+        log.info(f"No bot of rank {rank} identified...returning None")
+        return None
+    
+
+    def get_ranked_bots(self)->list[Bot]:
+        return sorted(list(self.bots.values()), key=lambda bot:bot.rank)
+        
