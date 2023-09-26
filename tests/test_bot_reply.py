@@ -44,7 +44,6 @@ def test_bot_reply():
 
     message:Message = convo.messages[convo.message_count-1]
     assert(message == new_message)
-    # had to make a more genrous assertion to just "contains" because it wasn't giving only this...
     assert(message.content.__contains__("HELLO WORLD"))
     log.info("Reply came back as requested")
 
