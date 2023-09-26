@@ -46,7 +46,29 @@ class BotGallery:
         
         return self.bots[bot_name]
 
-    
+    def move_bot(self, old_rank: Bot, new_rank: int) -> None:
+        """
+        Moves a bot to a new rank and adjusts the ranks of other bots accordingly.
+        """
+        bot = self.get_bot_by_rank(old_rank)
+        if old_rank == new_rank:
+            log.info(f"No change in rank for bot {bot.name}.")
+            return
+
+        # Update ranks of other bots
+        if old_rank < new_rank:
+            for name, other_bot in self.bots.items():
+                if old_rank < other_bot.rank <= new_rank:
+                    other_bot.rank -= 1
+        else:
+            for name, other_bot in self.bots.items():
+                if new_rank <= other_bot.rank < old_rank:
+                    other_bot.rank += 1
+
+        # Update rank of the moved bot
+        bot.rank = new_rank
+        log.info(f"Bot {bot.name} moved to rank {bot.rank}.")
+        
     def lower_rank(self,bot:Bot):
         swap_bot = self.get_bot_by_rank(bot.rank+1)        
         if swap_bot is not None:
