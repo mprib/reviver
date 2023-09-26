@@ -72,3 +72,4 @@ def test_bot_ranking():
     
 if __name__ == "__main__":
     test_bot_creation()
+    test_bot_ranking()
