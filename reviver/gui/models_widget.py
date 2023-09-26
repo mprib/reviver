@@ -2,10 +2,12 @@ from PySide6.QtWidgets import (
     QApplication,
     QTableView,
     QWidget,
+    QDialog,
     QHBoxLayout,
     QAbstractItemView,
 )
 from PySide6.QtGui import QStandardItemModel, QStandardItem
+from PySide6.QtCore import Signal, Qt
 import sys
 from dotenv import load_dotenv
 from os import getenv
@@ -16,7 +18,9 @@ import reviver.log
 log = reviver.log.get(__name__)
 
 
-class ModelsWidget(QWidget):
+class ModelsWidget(QDialog):
+    selected_model = Signal(str)
+
     def __init__(self, model_specs: ModelSpecSheet) -> None:
         super().__init__()
 
@@ -88,8 +92,18 @@ class ModelsWidget(QWidget):
         return format_dict
 
     def connect_widgets(self):
+        self.view.doubleClicked.connect(self.emit_selected_model)
         pass
 
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.emit_selected_model()
+ 
+    def emit_selected_model(self):
+        index = self.view.currentIndex().row()
+        model_name = self.item_model.item(index,0).text() # name in column 1
+        self.selected_model.emit(model_name)
+        self.close()  
 
 if __name__ == "__main__":
     archive_dir = Path(Path.home(), "reviver")
