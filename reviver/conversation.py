@@ -21,19 +21,21 @@ class QtSignaler(QObject):
 
 @dataclass(frozen=False, slots=True)
 class Conversation:
-    _id: int
     bot: Bot 
     title: str = "untitled"
-    messages: dict= field(default_factory=dict[int, Message])
+    messages: dict = None
     qt_signal:QtSignaler = QtSignaler()
 
 
     def __post_init__(self):
-        prompt_message = Message(role = "system", content=self.bot.system_prompt)
-        self.messages[0] = prompt_message
+        if self.messages is None:
+            self.messages = {}
+            #only create a new prompt message if you aren't loading in from the archive...
+            prompt_message = Message(role = "system", content=self.bot.system_prompt)
+            self.messages[0] = prompt_message
         
     def add_message(self, msg:Message)->None:
-        self.messages[self.message_count+1] = msg
+        self.messages[self.message_count] = msg
         self.qt_signal.new_styled_message.emit(msg)        
 
     @property
@@ -90,10 +92,8 @@ class Conversation:
                 "X-Title": "Festival Cobra",  # Replace with your actual app name
             }
 
-            log.info(f"pinging server with message: {self.messages[self.message_count]}")
+            log.info(f"pinging server with message: {self.messages[self.message_count-1]}")
             
-            # this ends up being a rather large block of code in the try...
-            # I acknowledge that and I'm prepared to leave it for now...
             response_stream = openai.ChatCompletion.create(
                     model=self.bot.model, 
                     messages=self.messages_prompt,
@@ -124,7 +124,7 @@ class Conversation:
                             time.sleep(.05)
                             self.qt_signal.new_styled_message.emit(new_message)
 
-                    # the below is a quick-and-dirty solution to incorporate the weird output of gpt turbo instruct
+                    # below is a quick-and-dirty solution to incorporate the weird output of gpt turbo instruct
                     if "text" in response.choices[0].keys():
                         new_word =response.choices[0]["text"]
                         reply += new_word
@@ -143,6 +143,23 @@ class Conversation:
             if response_count == 0:
                 log.info("No response")        
 
- 
         thread = Thread(target=worker,args=[],daemon=True )
         thread.start()
+
+
+    def __eq__(self, other):
+        """
+        needed to validate test assertion...and debug archive issues.
+        """
+
+        if isinstance(other, Conversation):
+            bots_equal = self.bot == other.bot
+            log.info(f"Bots equal?:{bots_equal}")
+            titles_equal = self.title == other.title
+            log.info(f"titles equal?:{titles_equal}")
+            messages_equal = self.messages == other.messages
+            log.info(f"Messages equal?:{messages_equal}")
+            equality = bots_equal and titles_equal and messages_equal
+            log.info(f"Equal?:{equality}")
+            return equality
+        return False

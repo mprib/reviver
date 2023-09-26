@@ -11,7 +11,7 @@ def test_conversation_creation():
     msg2 = Message(role="assistant", content="sup?")
     
     bot = Bot(name="test_bot", model = "llama_70b", rank=1, system_prompt="good bot")
-    convo = Conversation(_id=1, title = "New conversation", bot=bot)
+    convo = Conversation(title = "New conversation", bot=bot)
 
     convo.add_message(msg1)
     convo.add_message(msg2)
@@ -32,7 +32,7 @@ def test_token_size():
     assert(msg1.token_size == msg2.token_size)
     
     bot = Bot(name="test_bot", model = "llama_70b", rank = 1, system_prompt="good bot")
-    convo = Conversation(_id=1, title = "New conversation", bot=bot)
+    convo = Conversation(title = "New conversation", bot=bot)
     
 
     system_message = convo.messages[0]

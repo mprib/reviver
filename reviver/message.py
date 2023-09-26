@@ -21,7 +21,8 @@ class Message:
     time: str = None
 
     def __post_init__(self):
-        self.time = datetime.now()
+        if self.time is None:
+            self.time = datetime.now()
         
     @property
     def backtic_complete_content(self) -> str:

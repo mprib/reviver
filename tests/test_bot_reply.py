@@ -23,8 +23,7 @@ def test_bot_reply():
     model = "openai/gpt-3.5-turbo-0301"
     bot = Bot(name = "test_bot", model=model,rank=1, system_prompt="You will only reply with the word:HELLO WORLD. It should be spelled in all capitals with no other punctuation. User will say 'proceed' and then you will responsd with 'HELLO WORLD'.")
 
-    convo_id = 1
-    convo = Conversation(_id=convo_id, bot=bot)
+    convo = Conversation(bot=bot)
 
     assert(convo.message_count==1) # system prompt
 
@@ -43,7 +42,7 @@ def test_bot_reply():
 
     assert(convo.message_count==3) # new message added
 
-    message:Message = convo.messages[convo.message_count]
+    message:Message = convo.messages[convo.message_count-1]
     assert(message == new_message)
     # had to make a more genrous assertion to just "contains" because it wasn't giving only this...
     assert(message.content.__contains__("HELLO WORLD"))

@@ -55,135 +55,57 @@ class Archive:
         return bot
 
 
-    def get_messages(self, conversation_id: int) -> dict[int, Message]:
-        # need to get all message positions first
-        sql = """
-        SELECT position FROM messages WHERE conversation_id = :conversation_id
-        """
-        connection = self.get_connection()
-        cursor = connection.cursor()
-        rows = cursor.execute(sql, {"conversation_id": conversation_id}).fetchall()
-
-        msg_positions = [position[0] for position in rows]
-
-        log.info(f"Message positions are:{msg_positions}")
-
-        messages = {
-            position: self.get_message(conversation_id, position)
-            for position in msg_positions
-        }
-
-        return messages
-
-    def store_message(self, message: Message) -> None:
-        message_data = asdict(message)
-        columns = []
-        bindings = {}
-        for key, value in message_data.items():
-            columns.append(key)
-            bindings[key] = value
-
-        sql = f"""
-            INSERT OR REPLACE INTO 
-            messages
-            ({", ".join(columns)})
-            VALUES 
-            ({", ".join(':' + name for name in columns)})
-            """
-
-        connection = self.get_connection()
-        cursor = connection.cursor()
-        log.info(f"Storing message data: {bindings}")
-        cursor.execute(sql, bindings)
-        connection.commit()
-        connection.close()
-
-    def get_message(self, conversation_id: int, position: int) -> Message:
-        sql = """
-        SELECT * FROM messages WHERE conversation_id=? AND position =?
-        """
-        conn = self.get_connection()
-        cursor = conn.cursor()
-
-        rows = cursor.execute(sql, (conversation_id, position)).fetchall()
-        column_names = [description[0] for description in cursor.description]
-        msg_data = {name: value for name, value in zip(column_names, rows[0])}
-        conn.close()
-        msg = Message(**msg_data)
-        return msg
-
-    def get_conversation_list(self):
-        """
-        returns a list of all bot ids stored in the database, including hidden ones
-        """
-        sql = """
-        SELECT _id from conversations
-        """
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        rows = cursor.execute(sql).fetchall()
-        conn.close()
-        conversation_ids = [row[0] for row in rows]
-
-        return conversation_ids
-
     def store_conversation(self, convo: Conversation) -> None:
         """
         Note: this will store the messages and id of the bot that participated
         in the conversation, but it won't save the bot data itself
         """
 
+        log.info(f"Storing conversation {convo.title}")
         convo_data = {}
-        convo_data["_id"] = convo._id
         convo_data["title"] = convo.title
-        convo_data["bot_id"] = convo.bot._id
-        for position, msg in convo.messages.items():
-            self.store_message(msg)
+        convo_data["bot_name"] = convo.bot.name
 
-        columns = []
-        bindings = {}
-        for key, value in convo_data.items():
-            columns.append(key)
-            bindings[key] = value
+        messages = {str(position):asdict(msg) for position,msg in convo.messages.items()}
+        convo_data["messages"] = messages
 
-        sql = f"""
-            INSERT OR REPLACE INTO 
-            conversations 
-            ({", ".join(columns)})
-            VALUES 
-            ({", ".join(':' + name for name in columns)})
-            """
+        # Determine the path to the file where the conversation will be stored
+        convo_path = Path(self.conversations_dir, f"{convo.title}.toml")
 
-        connection = self.get_connection()
-        cursor = connection.cursor()
-        log.info(f"Storing conversation data: {bindings}")
-        cursor.execute(sql, bindings)
-        connection.commit()
-        connection.close()
+        # Write the dictionary to a toml file
+        with open(convo_path, "w") as f:
+            rtoml.dump(convo_data, f)
 
-    def get_conversation(
-        self, convo_id, bot_gallery: BotGallery
-    ) -> Conversation:
-        sql = """
-            SELECT * FROM conversations WHERE _id = :_id        
+    def load_conversation(self, convo_title: str, bot_gallery: BotGallery) -> Conversation:
         """
-        bindings = {"_id": convo_id}
-        connection = self.get_connection()
-        cursor = connection.cursor()
-        log.info(f"Storing conversation data: {bindings}")
-        rows = cursor.execute(sql, bindings).fetchall()
-        column_names = [description[0] for description in cursor.description]
-        convo_data = {name: value for name, value in zip(column_names, rows[0])}
-        connection.commit()
-        connection.close()
+        Loads a conversation from a toml file.
+        Requires a BotGallery to find the right bot.
+        """
 
-        messages = self.get_messages(conversation_id=convo_id)
-        convo_id = convo_data["_id"]
-        title = convo_data["title"]
-        bot_id = convo_data["bot_id"]
+        log.info(f"Loading conversation {convo_title}")
+        # Determine the path to the file where the conversation is stored
+        convo_path = Path(self.conversations_dir, f"{convo_title}.toml")
 
-        bot = bot_gallery.get_bot(bot_id)
+        # Read the dictionary from the toml file
+        with open(convo_path, "r") as f:
+            convo_data = rtoml.load(f)
+
+        # Fetch the bot from BotGallery
+        bot = bot_gallery.get_bot(convo_data["bot_name"])
+
+        messages = {}
+
+        # Transform the dict back to Message objects
+        for position, msg_data in convo_data["messages"].items():
+            msg = Message(**msg_data)
+            messages[int(position)] = msg
+
+        # Create a Conversation object with loaded data
         convo = Conversation(
-            _id=convo_id, bot=bot, title=title, messages=messages
+            bot = bot,
+            title = convo_data["title"],
+            messages = messages
         )
-        return convo
+
+        return convo 
+         
