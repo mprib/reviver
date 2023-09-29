@@ -1,40 +1,83 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication,QTabWidget,QTabBar, QLabel, QInputDialog, QListWidget, QVBoxLayout, QWidget
-from reviver.bot import BotGallery
+from PySide6.QtWidgets import (
+    QApplication,
+    QHBoxLayout,
+    QPushButton,
+    QTabWidget,
+    QTabBar,
+    QLabel,
+    QInputDialog,
+    QListWidget,
+    QVBoxLayout,
+    QWidget,
+)
+from reviver.bot import BotGallery, Bot
+from reviver.gui.bot_widget import BotWidget
+from reviver.models_data import ModelSpecSheet
 
-class BotTabBar(QTabBar):
-    def __init__(self, parent=None):
-        super().__init__(parent)
 
-    def moveTab(self, fromIndex, toIndex):
-        super().moveTab(fromIndex, toIndex)
-        self.parent().handleTabMove(fromIndex, toIndex)
-
-    
-class BotTabWidget(QTabWidget):
-    def __init__(self, bot_gallery):
+class BotGalleryWidget(QListWidget):
+    def __init__(self, bot_gallery:BotGallery, spec_sheet:ModelSpecSheet):
         super().__init__()
         self.gallery = bot_gallery
+        self.spec_sheet = spec_sheet
 
-        self.setTabBar(BotTabBar(self))
+        self.list_widget = QListWidget()
+        self.active_bot = self.gallery.get_bot_by_rank(1)
+        self.bot_widget = BotWidget(self.active_bot, spec_sheet)
 
-        # layout = QVBoxLayout(self)
-        # layout.addWidget(self.tabWidget)
+        self.add_button = QPushButton("Add bot")
+        self.remove_button = QPushButton("Remove bot")
 
-        self.initUI()
+        self.add_button.clicked.connect(self.add_bot)
+        self.remove_button.clicked.connect(self.remove_bot)
 
-    def initUI(self):
-        self.setMovable(True)
-        
+        self.list_widget.itemClicked.connect(self.update_bot_widget)
+
+        self.layout = QHBoxLayout()
+        self.setLayout(self.layout)
+
+        self.layout.addWidget(self.list_widget)
+        self.layout.addWidget(self.bot_widget)
+        self.layout.addWidget(self.add_button)
+        self.layout.addWidget(self.remove_button)
+
+        self.load_bots()
+
+    def load_bots(self):
+        self.list_widget.clear()
         for bot in self.gallery.get_ranked_bots():
-            tab = QWidget()
-            layout = QVBoxLayout(tab)
-            layout.addWidget(QLabel(f"Bot name: {bot.name}"))
-            layout.addWidget(QLabel(f"Bot model: {bot.model}"))
-            layout.addWidget(QLabel(f"Bot rank: {bot.rank}"))
-            self.addTab(tab, bot.name)
+            self.list_widget.addItem(bot.name)
 
-if __name__ =="__main__":
+    def add_bot(self):
+        name, ok = QInputDialog.getText(self, "Add bot", "Enter bot name:")
+        if ok and name:
+            self.gallery.create_new_bot(name, "model")
+            self.load_bots()
+
+    def remove_bot(self):
+        item = self.list_widget.currentItem()
+        if item:
+            self.gallery.remove_bot(item.text())
+            self.load_bots()
+
+    def update_bot_widget(self, item):
+        bot = self.gallery.find_bot_by_name(item.text())
+        if bot:
+            self.bot_widget.load_bot(bot)
+
+
+if __name__ == "__main__":
+    from dotenv import load_dotenv
+    from pathlib import Path
+    from os import getenv
+
+    archive_dir = Path(Path.home(), "reviver")
+    env_location = Path(archive_dir, ".env")
+    load_dotenv(dotenv_path=env_location)
+    key = getenv("OPEN_ROUTER_API_KEY")
+    spec_sheet = ModelSpecSheet(key)
+
     # Assuming "gallery" is an instance of BotGallery
     gallery = BotGallery()
     gallery.create_new_bot("Bot1", "model1")
@@ -42,6 +85,6 @@ if __name__ =="__main__":
     gallery.create_new_bot("Bot3", "model3")
 
     app = QApplication([])
-    bot_tab_widget = BotTabWidget(gallery)
-    bot_tab_widget.show()
+    bot_gallery_widget = BotGalleryWidget(gallery, spec_sheet)
+    bot_gallery_widget.show()
     app.exec()
