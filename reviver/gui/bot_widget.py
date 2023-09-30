@@ -24,7 +24,7 @@ log = reviver.log.get(__name__)
 class BotWidget(QWidget):
     def __init__(self, bot: Bot, spec_sheet: ModelSpecSheet, parent=None):
         super(BotWidget, self).__init__(parent)
-        self.bot = bot
+        # self.bot = bot
         # Create widgets for each parameter of the Bot class
         self.name_widget = QLineEdit()
         self.model_name = QPushButton()
@@ -49,7 +49,7 @@ class BotWidget(QWidget):
 
         self.place_widgets()
         self.connect_widgets()
-        self.load_bot()
+        self.load_bot(bot) # will set self.bot to bot within 
 
     def connect_widgets(self):
         self.expand_button.clicked.connect(self.expand_system_prompt)
@@ -112,7 +112,8 @@ class BotWidget(QWidget):
 
         return container
 
-    def load_bot(self):
+    def load_bot(self, bot:Bot):
+        self.bot = bot
         def set_slider_spinbox_value(layout, value):
             # Slider is the first child in the layout
             slider = layout.itemAt(0).widget()

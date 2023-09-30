@@ -14,7 +14,9 @@ from PySide6.QtWidgets import (
 from reviver.bot import BotGallery, Bot
 from reviver.gui.bot_widget import BotWidget
 from reviver.models_data import ModelSpecSheet
+import reviver.log
 
+log = reviver.log.get(__name__)
 
 class BotGalleryWidget(QListWidget):
     def __init__(self, bot_gallery:BotGallery, spec_sheet:ModelSpecSheet):
@@ -29,21 +31,31 @@ class BotGalleryWidget(QListWidget):
         self.add_button = QPushButton("Add bot")
         self.remove_button = QPushButton("Remove bot")
 
+        self.load_bots()
+        self.place_widgets()
+        self.connect_widgets()
+        
+    def place_widgets(self):
+        self.setLayout(QHBoxLayout())
+        self.left_half = QVBoxLayout()
+
+        self.left_half.addWidget(self.list_widget)
+                
+        self.list_buttons = QHBoxLayout()
+        self.list_buttons.addWidget(self.add_button)
+        self.list_buttons.addWidget(self.remove_button)
+        self.left_half.addLayout(self.list_buttons)
+        
+        self.layout().addLayout(self.left_half)
+        self.layout().addWidget(self.bot_widget)
+    
+    
+    def connect_widgets(self):
+
         self.add_button.clicked.connect(self.add_bot)
         self.remove_button.clicked.connect(self.remove_bot)
-
         self.list_widget.itemClicked.connect(self.update_bot_widget)
-
-        self.layout = QHBoxLayout()
-        self.setLayout(self.layout)
-
-        self.layout.addWidget(self.list_widget)
-        self.layout.addWidget(self.bot_widget)
-        self.layout.addWidget(self.add_button)
-        self.layout.addWidget(self.remove_button)
-
-        self.load_bots()
-
+    
     def load_bots(self):
         self.list_widget.clear()
         for bot in self.gallery.get_ranked_bots():
@@ -62,7 +74,8 @@ class BotGalleryWidget(QListWidget):
             self.load_bots()
 
     def update_bot_widget(self, item):
-        bot = self.gallery.find_bot_by_name(item.text())
+        log.info(f"Updating bot widget to reflect {item.text()}")
+        bot = self.gallery.bots[item.text()]
         if bot:
             self.bot_widget.load_bot(bot)
 
