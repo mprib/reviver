@@ -92,7 +92,7 @@ class BotGalleryWidget(QListWidget):
                     self.list_widget.setCurrentItem(matching_items[0])
  
     def launch_duplicate_warning(self, name, warning_text):
-        log.warn(f"Attempting to create bot using pre-existing name: {name}")
+        log.warning(f"Attempting to create bot using pre-existing name: {name}")
         message_box = QMessageBox(parent=self)
         message_box.setIcon(QMessageBox.Warning)
         message_box.setText(warning_text)
@@ -124,6 +124,7 @@ class BotGalleryWidget(QListWidget):
         item = self.list_widget.currentItem()
         if item:
             self.gallery.remove_bot(item.text())
+            self.gallery.rerank_bots()
             self.load_bots()
 
     def update_bot_widget(self, item):

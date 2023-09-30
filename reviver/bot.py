@@ -103,4 +103,19 @@ class BotGallery:
         self.bots[old_name].name = new_name
         self.bots[new_name]= self.bots.pop(old_name)
     
-        log.info(f"Renaming bots...current bots are {[bot.name for bot in self.get_ranked_bots()]}")
+        log.info(f"Renaming {old_name} to {new_name}...current bots are {[bot.name for bot in self.get_ranked_bots()]}")
+        
+    def remove_bot(self, bot_name:str):
+        self.bots.pop(bot_name)
+    
+    def rerank_bots(self):
+        """
+        If a bot has been removed, then good practice to rerank to keep indices continous
+        Can also be run on load to ensure that manual copy-paste of file doesn't cause duplicate ranks floating around
+        """
+        rank = 1
+        for bot in self.get_ranked_bots():
+            bot.rank = rank
+            rank+=1
+            
+            
