@@ -1,18 +1,37 @@
-from PySide6.QtWidgets import QApplication, QDialog,  QPushButton, QWidget, QFormLayout, QLineEdit, QTextEdit, QCheckBox, QSlider, QVBoxLayout, QHBoxLayout, QDoubleSpinBox, QSpinBox
+from PySide6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QLabel,
+    QPushButton,
+    QWidget,
+    QFormLayout,
+    QLineEdit,
+    QTextEdit,
+    QSlider,
+    QVBoxLayout,
+    QHBoxLayout,
+    QDoubleSpinBox,
+    QSpinBox,
+)
 from PySide6.QtCore import Qt
 from reviver.bot import Bot
 import reviver.log
+from reviver.gui.models_widget import ModelsWidget
+from reviver.models_data import ModelSpecSheet
+
 log = reviver.log.get(__name__)
 
-class BotWidget(QWidget):
-    def __init__(self, bot: Bot, parent=None):
-        super(BotWidget, self).__init__(parent)
-        self.bot = bot
-        # Create widgets for each parameter of the Bot class
-        self.name_widget = QLineEdit()
-        self.model_widget = QLineEdit()
-        self.hidden_widget = QCheckBox()
 
+class BotWidget(QWidget):
+    def __init__(self, bot: Bot, spec_sheet: ModelSpecSheet, parent=None):
+        super(BotWidget, self).__init__(parent)
+        # self.bot = bot
+        self.spec_sheet = spec_sheet
+        # Create widgets for each parameter of the Bot class
+        self.name_widget = QLabel()
+        self.model_name = QPushButton()
+        # self.hidden_widget = QCheckBox()
+        
         # System prompt will have option to expand
         self.system_prompt_container = QVBoxLayout()
         self.system_prompt_widget = QTextEdit()
@@ -21,10 +40,10 @@ class BotWidget(QWidget):
         self.system_prompt_container.addWidget(self.expand_button)
 
         self.max_tokens_widget = self.create_slider_spinbox_pair(1, 1000, 1)
-        self.temperature_widget = self.create_slider_spinbox_pair(0, 2,.05)
-        self.top_p_widget = self.create_slider_spinbox_pair(0, 1,.05)
-        self.frequency_penalty_widget = self.create_slider_spinbox_pair(0, 2,.05)
-        self.presence_penalty_widget = self.create_slider_spinbox_pair(0, 2,.05)
+        self.temperature_widget = self.create_slider_spinbox_pair(0, 2, 0.05)
+        self.top_p_widget = self.create_slider_spinbox_pair(0, 1, 0.05)
+        self.frequency_penalty_widget = self.create_slider_spinbox_pair(0, 2, 0.05)
+        self.presence_penalty_widget = self.create_slider_spinbox_pair(0, 2, 0.05)
 
         # Add Save and Cancel buttons
         self.save_button = QPushButton("Save Changes")
@@ -32,13 +51,15 @@ class BotWidget(QWidget):
 
         self.place_widgets()
         self.connect_widgets()
-        self.load_bot()
-
+        self.load_bot(bot) # will set self.bot to bot within 
 
     def connect_widgets(self):
         self.expand_button.clicked.connect(self.expand_system_prompt)
         self.save_button.clicked.connect(self.update_bot)
-        self.cancel_button.clicked.connect(self.load_bot) # revert the form to what it was (the current bot state)
+        self.cancel_button.clicked.connect(
+            self.restore_bot
+        )  # revert the form to what it was (the current bot state)
+        self.model_name.clicked.connect(self.show_models_widget)
 
     def place_widgets(self):
         self.setLayout(QVBoxLayout())
@@ -47,8 +68,8 @@ class BotWidget(QWidget):
 
         # Add widgets to form layout
         self.form.addRow("name", self.name_widget)
-        self.form.addRow("model", self.model_widget)
-        self.form.addRow("hidden", self.hidden_widget)
+        self.form.addRow("model", self.model_name)
+        # self.form.addRow("hidden", self.hidden_widget)
         self.form.addRow("system_prompt", self.system_prompt_container)
         self.form.addRow("max_tokens", self.max_tokens_widget)
         self.form.addRow("temperature", self.temperature_widget)
@@ -57,7 +78,7 @@ class BotWidget(QWidget):
         self.form.addRow("presence_penalty", self.presence_penalty_widget)
 
         self.layout().addLayout(self.form)
-        
+
         self.controls = QHBoxLayout()
         self.controls.addWidget(self.cancel_button)
         self.controls.addWidget(self.save_button)
@@ -65,7 +86,6 @@ class BotWidget(QWidget):
         self.layout().addLayout(self.controls)
 
     def create_slider_spinbox_pair(self, min_value, max_value, step_size):
-
         multiplier = 100  # for two decimal points precision
 
         slider = QSlider(Qt.Horizontal)
@@ -74,8 +94,7 @@ class BotWidget(QWidget):
         slider.setSingleStep(step_size * multiplier)
         slider.setValue(min_value * multiplier)
 
-
-        if step_size ==1:
+        if step_size == 1:
             spinbox = QSpinBox()
         else:
             spinbox = QDoubleSpinBox()
@@ -95,29 +114,35 @@ class BotWidget(QWidget):
 
         return container
 
+    def restore_bot(self):
+        self.load_bot(self.bot)
 
-    def load_bot(self):
+    def load_bot(self, bot:Bot):
+        self.bot = bot
         def set_slider_spinbox_value(layout, value):
             # Slider is the first child in the layout
             slider = layout.itemAt(0).widget()
             slider.setValue(value)
-        
+
             # SpinBox is the second child in the layout
             spinbox = layout.itemAt(1).widget()
             spinbox.setValue(value)
 
         self.name_widget.setText(self.bot.name)
-        self.model_widget.setText(self.bot.model)
-        self.hidden_widget.setChecked(self.bot.hidden)
+    
+        self.model_name.setText(self.bot.model or "None")
+        # self.hidden_widget.setChecked(self.bot.hidden)
         self.system_prompt_widget.setText(self.bot.system_prompt)
-        
+
         set_slider_spinbox_value(self.max_tokens_widget, self.bot.max_tokens)
         set_slider_spinbox_value(self.temperature_widget, self.bot.temperature)
         set_slider_spinbox_value(self.top_p_widget, self.bot.top_p)
-        set_slider_spinbox_value(self.frequency_penalty_widget, self.bot.frequency_penalty)
-        set_slider_spinbox_value(self.presence_penalty_widget, self.bot.presence_penalty)
-
-
+        set_slider_spinbox_value(
+            self.frequency_penalty_widget, self.bot.frequency_penalty
+        )
+        set_slider_spinbox_value(
+            self.presence_penalty_widget, self.bot.presence_penalty
+        )
 
     def update_bot(self):
         def get_slider_spinbox_value(layout):
@@ -127,15 +152,19 @@ class BotWidget(QWidget):
 
         # Update bot object
         self.bot.name = self.name_widget.text()
-        self.bot.model = self.model_widget.text()
-        self.bot.hidden = self.hidden_widget.isChecked()
+        self.bot.model = self.model_name.text()
+        # self.bot.hidden = self.hidden_widget.isChecked()
         self.bot.system_prompt = self.system_prompt_widget.toPlainText()
-    
+
         self.bot.max_tokens = get_slider_spinbox_value(self.max_tokens_widget)
         self.bot.temperature = get_slider_spinbox_value(self.temperature_widget)
         self.bot.top_p = get_slider_spinbox_value(self.top_p_widget)
-        self.bot.frequency_penalty = get_slider_spinbox_value(self.frequency_penalty_widget)
-        self.bot.presence_penalty = get_slider_spinbox_value(self.presence_penalty_widget)
+        self.bot.frequency_penalty = get_slider_spinbox_value(
+            self.frequency_penalty_widget
+        )
+        self.bot.presence_penalty = get_slider_spinbox_value(
+            self.presence_penalty_widget
+        )
 
         # Log the update
         log.info(f"Bot {self.bot.name} updated successfully")
@@ -154,10 +183,12 @@ class BotWidget(QWidget):
         text_edit.setText(self.system_prompt_widget.toPlainText())
 
         # Create OK and Cancel buttons for the dialog
-        ok_button = QPushButton("Save")
+        ok_button = QPushButton("Return")
         cancel_button = QPushButton("Cancel")
 
-        ok_button.clicked.connect(lambda: self.update_system_prompt_and_close_dialog(text_edit))
+        ok_button.clicked.connect(
+            lambda: self.update_system_prompt_and_close_dialog(text_edit)
+        )
         cancel_button.clicked.connect(self.dialog.close)
 
         layout.addWidget(ok_button)
@@ -170,12 +201,30 @@ class BotWidget(QWidget):
         self.system_prompt_widget.setText(text_edit.toPlainText())
         # Close the dialog
         self.dialog.close()
- 
-        
-        
+
+    def show_models_widget(self):
+        log.info("Launching models widget")
+        self.models_widget = ModelsWidget(self.spec_sheet)
+        self.models_widget.selected_model.connect(self.update_model_widget)
+        self.models_widget.show()
+
+    def update_model_widget(self, model_name:str):
+        log.info(f"Setting model name to {model_name}")
+        self.model_name.setText(model_name)
+           
 if __name__ == "__main__":
-    bot = Bot(_name="",model=None,rank=5, hidden=False)
+    bot = Bot(name="llama2", model=None, rank=5, hidden=False)
+    
+    from dotenv import load_dotenv
+    from pathlib import Path
+    from os import getenv
+
+    archive_dir = Path(Path.home(), "reviver")
+    env_location = Path(archive_dir,".env")
+    load_dotenv(dotenv_path=env_location)
+    key = getenv("OPEN_ROUTER_API_KEY")
+    spec_sheet = ModelSpecSheet(key)
     app = QApplication()
-    bot_widget = BotWidget(bot=bot)
+    bot_widget = BotWidget(bot=bot, spec_sheet=spec_sheet)
     bot_widget.show()
     app.exec()

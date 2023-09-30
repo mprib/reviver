@@ -1,23 +1,27 @@
-from typing import Optional
-from PySide6.QtWidgets import QApplication, QTableView, QWidget, QHBoxLayout, QAbstractItemView, QStyledItemDelegate
-from PySide6.QtGui import QTextDocument, QStandardItemModel, QStandardItem, QDoubleValidator, QIntValidator
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtWidgets import (
+    QApplication,
+    QTableView,
+    QWidget,
+    QDialog,
+    QHBoxLayout,
+    QAbstractItemView,
+)
 from PySide6.QtGui import QStandardItemModel, QStandardItem
-import pandas as pd
-from io import StringIO
+from PySide6.QtCore import Signal, Qt
 import sys
 from dotenv import load_dotenv
 from os import getenv
 from pathlib import Path
 from reviver.models_data import ModelSpecSheet
 import reviver.log
+
 log = reviver.log.get(__name__)
 
 
+class ModelsWidget(QDialog):
+    selected_model = Signal(str)
 
-class ModelsWidget(QWidget):
-    
-    def __init__(self, model_specs:ModelSpecSheet)->None:
+    def __init__(self, model_specs: ModelSpecSheet) -> None:
         super().__init__()
 
         self.item_model = QStandardItemModel()
@@ -38,34 +42,43 @@ class ModelsWidget(QWidget):
         self.view.setEditTriggers(QAbstractItemView.NoEditTriggers)
         # Enable row-based selection
         self.view.setSelectionBehavior(QAbstractItemView.SelectRows)
-    
+
         # Set sorting enabled
         self.view.setSortingEnabled(True)
-         
+
         # Set alternating row colors
         self.view.setAlternatingRowColors(True)
-        self.view.setStyleSheet("alternate-background-color: #eee; background-color: #fff;")
-
+        self.view.setStyleSheet(
+            "alternate-background-color: #eee; background-color: #fff;"
+        )
 
         self.place_widgets()
         self.connect_widgets()
-    
+
     def showEvent(self, event):
         super().showEvent(event)
 
         # Calculate the total width based on the content's size and the vertical header's width
-        width = self.view.verticalHeader().width() + self.view.horizontalHeader().length() + self.view.frameWidth() * 2
+        width = (
+            self.view.verticalHeader().width()
+            + self.view.horizontalHeader().length()
+            + self.view.frameWidth() * 2
+        )
 
         # Calculate the total height based on the content's size and the horizontal header's height
-        height = self.view.horizontalHeader().height() + self.view.verticalHeader().sectionSize(0) * self.item_model.rowCount() + self.view.frameWidth() * 2
+        height = (
+            self.view.horizontalHeader().height()
+            + self.view.verticalHeader().sectionSize(0) * self.item_model.rowCount()
+            + self.view.frameWidth() * 2
+        )
 
         # Resize the widget based on the calculated size
-        self.resize(width+50, height+50)
-         
+        self.resize(width + 50, height + 50)
+
     def place_widgets(self):
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.view)
-        
+
         # resize widget for contents
         self.setGeometry(self.view.geometry())
 
@@ -76,15 +89,25 @@ class ModelsWidget(QWidget):
                 format_dict[column] = "${:,.6f}"
             elif model_specs_df.dtypes[column] == int:
                 format_dict[column] = "{:,}"
-        return format_dict 
+        return format_dict
+
     def connect_widgets(self):
+        self.view.doubleClicked.connect(self.emit_selected_model)
         pass
 
-
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.emit_selected_model()
+ 
+    def emit_selected_model(self):
+        index = self.view.currentIndex().row()
+        model_name = self.item_model.item(index,0).text() # name in column 1
+        self.selected_model.emit(model_name)
+        self.close()  
 
 if __name__ == "__main__":
     archive_dir = Path(Path.home(), "reviver")
-    env_location = Path(archive_dir,".env")
+    env_location = Path(archive_dir, ".env")
     load_dotenv(dotenv_path=env_location)
     key = getenv("OPEN_ROUTER_API_KEY")
 
@@ -93,7 +116,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     models_widget = ModelsWidget(spec_sheet)
     models_widget.show()
-
 
     sys.exit(app.exec())
     # %%

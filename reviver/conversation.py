@@ -1,6 +1,6 @@
 import openai
 import reviver.log
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from reviver.bot import Bot
 from queue import Queue
 from threading import Thread
