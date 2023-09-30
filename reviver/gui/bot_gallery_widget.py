@@ -83,7 +83,7 @@ class BotGalleryWidget(QListWidget):
             else:
                 old_name = self.bot_widget.bot.name
                 self.gallery.rename_bot(old_name,new_name)
-                self.bot_widget.load_bot(self.bot_widget.bot)
+                self.bot_widget.display_bot(self.bot_widget.bot)
                 self.load_bots()
 
                 # Restore the selection with the new name
@@ -132,7 +132,7 @@ class BotGalleryWidget(QListWidget):
             log.info(f"Updating bot widget to display {item.text()}")
             bot = self.gallery.bots[item.text()]
             if bot:
-                self.bot_widget.load_bot(bot)
+                self.bot_widget.display_bot(bot)
 
 
 if __name__ == "__main__":

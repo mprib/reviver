@@ -18,20 +18,21 @@ from reviver.bot import Bot
 import reviver.log
 from reviver.gui.models_widget import ModelsWidget
 from reviver.models_data import ModelSpecSheet
+from reviver.controller import Controller
 
 log = reviver.log.get(__name__)
 
 
 class BotWidget(QWidget):
-    def __init__(self, bot: Bot, spec_sheet: ModelSpecSheet, parent=None):
+    def __init__(self, controller=Controller,bot_name=None, parent=None):
         super(BotWidget, self).__init__(parent)
-        # self.bot = bot
-        self.spec_sheet = spec_sheet
+        self.controller = controller
+
         # Create widgets for each parameter of the Bot class
         self.name_widget = QLabel()
         self.model_name = QPushButton()
         # self.hidden_widget = QCheckBox()
-        
+
         # System prompt will have option to expand
         self.system_prompt_container = QVBoxLayout()
         self.system_prompt_widget = QTextEdit()
@@ -51,7 +52,7 @@ class BotWidget(QWidget):
 
         self.place_widgets()
         self.connect_widgets()
-        self.load_bot(bot) # will set self.bot to bot within 
+        self.display_bot(bot_name)  # will set self.bot to bot within
 
     def connect_widgets(self):
         self.expand_button.clicked.connect(self.expand_system_prompt)
@@ -115,10 +116,39 @@ class BotWidget(QWidget):
         return container
 
     def restore_bot(self):
-        self.load_bot(self.bot)
+        self.display_bot(self.bot)
 
-    def load_bot(self, bot:Bot):
-        self.bot = bot
+    def set_all_children_enabled(self,enabled:bool):
+        for child in self.children():
+            if isinstance(child, QWidget): # check if the child is a widget
+                child.setEnabled(enabled) 
+                
+        
+    def display_bot(self, bot_name: str=None):
+        if bot_name is not None:
+            bot_data = self.controller.get_bot_data(bot_name)
+            set_child_widget_enabled(self,True)
+            name= bot_data["name"]
+            model= bot_data["model"]
+            system_prompt= bot_data["system_prompt"]
+            max_tokens= bot_data["max_tokens"]
+            temperature= bot_data["temperature"]
+            top_p= bot_data["top_p"]
+            frequency_penalty= bot_data["frequency_penalty"]
+            presence_penalty= bot_data["presence_penalty"]
+        else:
+            log.info("Disabling children widgets")
+            set_child_widget_enabled(self, False)
+            name=""
+            model=""
+            system_prompt=""
+            max_tokens=0
+            temperature=0
+            top_p=0
+            frequency_penalty=0
+            presence_penalty=0
+
+            
         def set_slider_spinbox_value(layout, value):
             # Slider is the first child in the layout
             slider = layout.itemAt(0).widget()
@@ -128,20 +158,19 @@ class BotWidget(QWidget):
             spinbox = layout.itemAt(1).widget()
             spinbox.setValue(value)
 
-        self.name_widget.setText(self.bot.name)
-    
-        self.model_name.setText(self.bot.model or "None")
-        # self.hidden_widget.setChecked(self.bot.hidden)
-        self.system_prompt_widget.setText(self.bot.system_prompt)
+        self.name_widget.setText(name)
 
-        set_slider_spinbox_value(self.max_tokens_widget, self.bot.max_tokens)
-        set_slider_spinbox_value(self.temperature_widget, self.bot.temperature)
-        set_slider_spinbox_value(self.top_p_widget, self.bot.top_p)
+        self.model_name.setText(model or "None")
+        self.system_prompt_widget.setText(system_prompt)
+
+        set_slider_spinbox_value(self.max_tokens_widget, max_tokens)
+        set_slider_spinbox_value(self.temperature_widget, temperature)
+        set_slider_spinbox_value(self.top_p_widget, top_p)
         set_slider_spinbox_value(
-            self.frequency_penalty_widget, self.bot.frequency_penalty
+            self.frequency_penalty_widget, frequency_penalty
         )
         set_slider_spinbox_value(
-            self.presence_penalty_widget, self.bot.presence_penalty
+            self.presence_penalty_widget, presence_penalty
         )
 
     def update_bot(self):
@@ -151,24 +180,26 @@ class BotWidget(QWidget):
             return spinbox.value()
 
         # Update bot object
-        self.bot.name = self.name_widget.text()
-        self.bot.model = self.model_name.text()
-        # self.bot.hidden = self.hidden_widget.isChecked()
-        self.bot.system_prompt = self.system_prompt_widget.toPlainText()
+        name = self.name_widget.text()
+        model = self.model_name.text()
+        system_prompt = self.system_prompt_widget.toPlainText()
+        max_tokens = get_slider_spinbox_value(self.max_tokens_widget)
+        temperature = get_slider_spinbox_value(self.temperature_widget)
+        top_p = get_slider_spinbox_value(self.top_p_widget)
+        frequency_penalty = get_slider_spinbox_value(self.frequency_penalty_widget)
+        presence_penalty = get_slider_spinbox_value(self.presence_penalty_widget)
 
-        self.bot.max_tokens = get_slider_spinbox_value(self.max_tokens_widget)
-        self.bot.temperature = get_slider_spinbox_value(self.temperature_widget)
-        self.bot.top_p = get_slider_spinbox_value(self.top_p_widget)
-        self.bot.frequency_penalty = get_slider_spinbox_value(
-            self.frequency_penalty_widget
+        log.info(f"Directing controller to update Bot {name}")
+        self.controller.update_bot(
+            name=name,
+            model=model,
+            system_prompt=system_prompt,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            top_p=top_p,
+            frequency_penalty=frequency_penalty,
+            presence_penalty=presence_penalty,
         )
-        self.bot.presence_penalty = get_slider_spinbox_value(
-            self.presence_penalty_widget
-        )
-
-        # Log the update
-        log.info(f"Bot {self.bot.name} updated successfully")
-        log.info(f"current params are: {self.bot}")
 
     def expand_system_prompt(self):
         # Create a new dialog with a QTextEdit to facilitate longer format input
@@ -204,27 +235,31 @@ class BotWidget(QWidget):
 
     def show_models_widget(self):
         log.info("Launching models widget")
-        self.models_widget = ModelsWidget(self.spec_sheet)
+        spec_sheet = self.controller.get_spec_sheet()
+        self.models_widget = ModelsWidget(spec_sheet)
         self.models_widget.selected_model.connect(self.update_model_widget)
         self.models_widget.show()
 
-    def update_model_widget(self, model_name:str):
+    def update_model_widget(self, model_name: str):
         log.info(f"Setting model name to {model_name}")
         self.model_name.setText(model_name)
-           
+
+def set_child_widget_enabled(parent_widget, enabled:bool):
+    for child in parent_widget.children():
+        if isinstance(child, QWidget): # check if the child is a widget
+            child.setEnabled(enabled)
+            set_child_widget_enabled(child, enabled)  # recursively disable grandchildren
+
 if __name__ == "__main__":
-    bot = Bot(name="llama2", model=None, rank=5, hidden=False)
-    
-    from dotenv import load_dotenv
+
+    from reviver.controller import Controller
+
     from pathlib import Path
-    from os import getenv
 
     archive_dir = Path(Path.home(), "reviver")
-    env_location = Path(archive_dir,".env")
-    load_dotenv(dotenv_path=env_location)
-    key = getenv("OPEN_ROUTER_API_KEY")
-    spec_sheet = ModelSpecSheet(key)
+    controller = Controller(archive_dir)
+    controller.add_bot("test_bot")
     app = QApplication()
-    bot_widget = BotWidget(bot=bot, spec_sheet=spec_sheet)
+    bot_widget = BotWidget(controller, "test_bot")
     bot_widget.show()
     app.exec()

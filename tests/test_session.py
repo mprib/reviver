@@ -5,7 +5,7 @@ from reviver import ROOT
 from reviver.bot import Bot
 from reviver.helper import delete_directory_contents
 import reviver.log
-from reviver.session import Session
+from reviver.controller import Controller
 log = reviver.log.get(__name__)
 
 
@@ -23,7 +23,7 @@ def test_session_creation():
     archive.store_bot(bot)
     del archive
 
-    Session(test_dir)
+    Controller(test_dir)
 
 
     # session.start_conversatin(bot_id=1)
