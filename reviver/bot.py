@@ -98,4 +98,9 @@ class BotGallery:
 
     def get_ranked_bots(self)->list[Bot]:
         return sorted(list(self.bots.values()), key=lambda bot:bot.rank)
-        
+    
+    def rename_bot(self, old_name:str, new_name:str):
+        self.bots[old_name].name = new_name
+        self.bots[new_name]= self.bots.pop(old_name)
+    
+        log.info(f"Renaming bots...current bots are {[bot.name for bot in self.get_ranked_bots()]}")

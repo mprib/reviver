@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
+    QLabel,
     QPushButton,
     QWidget,
     QFormLayout,
@@ -25,8 +26,9 @@ class BotWidget(QWidget):
     def __init__(self, bot: Bot, spec_sheet: ModelSpecSheet, parent=None):
         super(BotWidget, self).__init__(parent)
         # self.bot = bot
+        self.spec_sheet = spec_sheet
         # Create widgets for each parameter of the Bot class
-        self.name_widget = QLineEdit()
+        self.name_widget = QLabel()
         self.model_name = QPushButton()
         # self.hidden_widget = QCheckBox()
         
@@ -55,7 +57,7 @@ class BotWidget(QWidget):
         self.expand_button.clicked.connect(self.expand_system_prompt)
         self.save_button.clicked.connect(self.update_bot)
         self.cancel_button.clicked.connect(
-            self.load_bot
+            self.restore_bot
         )  # revert the form to what it was (the current bot state)
         self.model_name.clicked.connect(self.show_models_widget)
 
@@ -111,6 +113,9 @@ class BotWidget(QWidget):
         container.addWidget(spinbox)
 
         return container
+
+    def restore_bot(self):
+        self.load_bot(self.bot)
 
     def load_bot(self, bot:Bot):
         self.bot = bot
@@ -178,7 +183,7 @@ class BotWidget(QWidget):
         text_edit.setText(self.system_prompt_widget.toPlainText())
 
         # Create OK and Cancel buttons for the dialog
-        ok_button = QPushButton("Save")
+        ok_button = QPushButton("Return")
         cancel_button = QPushButton("Cancel")
 
         ok_button.clicked.connect(
@@ -199,7 +204,7 @@ class BotWidget(QWidget):
 
     def show_models_widget(self):
         log.info("Launching models widget")
-        self.models_widget = ModelsWidget(spec_sheet)
+        self.models_widget = ModelsWidget(self.spec_sheet)
         self.models_widget.selected_model.connect(self.update_model_widget)
         self.models_widget.show()
 
