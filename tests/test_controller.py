@@ -9,7 +9,7 @@ from reviver.controller import Controller
 log = reviver.log.get(__name__)
 
 
-def test_session_creation():
+def test_controller_creation():
 
     test_dir = Path(ROOT, "tests", "working_delete")    
     delete_directory_contents(test_dir)
@@ -32,4 +32,4 @@ def test_session_creation():
 
 
 if __name__== "__main__":
-    test_session_creation()
+    test_controller_creation()
