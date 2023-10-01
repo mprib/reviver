@@ -24,23 +24,19 @@ class Bot:
 class BotGallery:
     bots: dict = field(default_factory=dict[str, Bot])
     
-    def add_bot(self, bot:Bot):
-        self.bots[bot.name] = bot
-    
-    def create_new_bot(self, name:str, model:str=None):
-        """
-        Bot gallery is able to track bot_ids to make sure these
-        are unique
-        """
-        # new bots are at the top of the heap
-        bot = Bot(name,model, rank=1)
+    def create_new_bot(self, name:str, model:str=None)->bool:
+        if name not in self.bots.keys():
+            bot = Bot(name,model, rank=1)
         
-        for name, bt in self.bots.items():
-            bt.rank +=1       
+            for name, bt in self.bots.items():
+                bt.rank +=1       
 
-        self.bots[bot.name] = bot
-        
-        log.info(f"bot added:{name}")
+            self.bots[bot.name] = bot
+            log.info(f"bot added:{name}")
+            return True
+        else:
+            log.warning(f"Bot named {name} not added...name already present")
+            return False
 
     def get_bot(self, bot_name:str)->Bot:
         
@@ -99,11 +95,16 @@ class BotGallery:
     def get_ranked_bots(self)->list[Bot]:
         return sorted(list(self.bots.values()), key=lambda bot:bot.rank)
     
-    def rename_bot(self, old_name:str, new_name:str):
-        self.bots[old_name].name = new_name
-        self.bots[new_name]= self.bots.pop(old_name)
+    def rename_bot(self, old_name:str, new_name:str)->bool:
+        if new_name not in self.bots.keys():
+            self.bots[oed_name].name = new_name
+            self.bots[new_name]= self.bots.pop(old_name)
     
-        log.info(f"Renaming {old_name} to {new_name}...current bots are {[bot.name for bot in self.get_ranked_bots()]}")
+            log.info(f"Renaming {old_name} to {new_name}...current bots are {[bot.name for bot in self.get_ranked_bots()]}")
+            return True
+        else:
+            log.warning(f"Name already exists: {new_name}")
+            return False
         
     def remove_bot(self, bot_name:str):
         self.bots.pop(bot_name)

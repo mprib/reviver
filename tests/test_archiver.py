@@ -63,10 +63,9 @@ def test_convo_store_retrieve():
 
     bot_1 = Bot("test_bot", model="llama_70b", rank=1)
     bot_2 = Bot("test_bot2", model="llama_70b", rank=2)
-
-    bot_gallery = BotGallery()
-    bot_gallery.add_bot(bot_1)
-    bot_gallery.add_bot(bot_2)
+    bots = {bot_1.name:bot_1,
+            bot_2.name:bot_2}
+    bot_gallery = BotGallery(bots)
     
     convo = Conversation(bot=bot_1, title="test")
 

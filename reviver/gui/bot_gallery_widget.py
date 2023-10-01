@@ -15,32 +15,32 @@ from PySide6.QtWidgets import (
 from reviver.bot import BotGallery, Bot
 from reviver.gui.bot_widget import BotWidget
 from reviver.models_data import ModelSpecSheet
+from reviver.controller import Controller
 import reviver.log
 
 log = reviver.log.get(__name__)
 class DraggableListWidget(QListWidget):
-    def __init__(self, bot_gallery, parent=None):
+    def __init__(self,controller:Controller, parent=None):
         super().__init__(parent)
-        self.bot_gallery = bot_gallery
         self.setDragDropMode(QListWidget.InternalMove)
+        self.controller = controller
 
     def dropEvent(self, event):
         if event.source() == self:
             source_index = self.currentRow()
             super().dropEvent(event)
             destination_index = self.currentRow()
-            self.bot_gallery.move_bot(source_index + 1, destination_index + 1)
+            self.controller.move_bot(source_index + 1, destination_index + 1)
 
 # In BotGalleryWidget __init__ method
 class BotGalleryWidget(QListWidget):
-    def __init__(self, bot_gallery:BotGallery, spec_sheet:ModelSpecSheet):
+    def __init__(self, controller:Controller):
         super().__init__()
-        self.gallery = bot_gallery
-        self.spec_sheet = spec_sheet
+        self.controller = controller
+        
+        self.list_widget = DraggableListWidget(self.controller)
 
-        self.list_widget = DraggableListWidget(self.gallery)
-        initial_bot = self.gallery.get_bot_by_rank(1)
-        self.bot_widget = BotWidget(initial_bot, spec_sheet)
+        self.bot_widget = BotWidget(self.controller)
 
         self.add_button = QPushButton("Add")
         self.remove_button = QPushButton("Remove")
@@ -72,20 +72,20 @@ class BotGalleryWidget(QListWidget):
         self.remove_button.clicked.connect(self.remove_bot)
         self.rename_button.clicked.connect(self.rename_bot)
         self.list_widget.currentItemChanged.connect(self.update_bot_widget)
-        self.bot_widget.save_button.clicked.connect(self.load_bots)
+        # self.bot_widget.save_button.clicked.connect(self.load_bots)
+
 
     def rename_bot(self):
+        old_name = self.list_widget.currentItem().text()
         new_name, ok = QInputDialog.getText(self, "Add bot", "Enter bot name:")
         if ok and new_name:
             # confirm that this name is unique
-            if new_name in self.gallery.bots.keys():
+            success = self.controller.rename_bot(old_name,new_name)
+            if not success:
                 self.launch_duplicate_warning(new_name, f"Cannot rename bot to {new_name}")
             else:
-                old_name = self.bot_widget.bot.name
-                self.gallery.rename_bot(old_name,new_name)
-                self.bot_widget.load_bot(self.bot_widget.bot)
                 self.load_bots()
-
+                self.bot_widget.display_bot(new_name)
                 # Restore the selection with the new name
                 matching_items = self.list_widget.findItems(new_name, Qt.MatchExactly)
                 if matching_items:
@@ -105,20 +105,20 @@ class BotGalleryWidget(QListWidget):
     def load_bots(self):
         log.info("Loading ranked list of bot gallery.")
         self.list_widget.clear()
-        for bot in self.gallery.get_ranked_bots():
+        for bot in self.controller.get_ranked_bots():
             self.list_widget.addItem(bot.name)
+            self.list_widget.setCurrentRow(0)
 
     def add_bot(self):
-        name, ok = QInputDialog.getText(self, "Add bot", "Enter bot name:")
-        if ok and name:
-            # confirm that this name is unique
-            if name in self.gallery.bots.keys():
-                self.launch_duplicate_warning(name, f"Cannot create new bot named {name}")
-            else:
-                log.info(f"Creating new bot: {name}")
-                self.gallery.create_new_bot(name)
+        name, input_success = QInputDialog.getText(self, "Add bot", "Enter bot name:")
+        if input_success and name:
+            new_bot_success = self.controller.add_bot(name)
+            if new_bot_success:
+                log.info(f"New bot created {name}")
                 self.load_bots()
                 self.list_widget.setCurrentRow(0)
+            else:
+                self.launch_duplicate_warning(name, f"Cannot create new bot named {name}")
 
     def remove_bot(self):
         item = self.list_widget.currentItem()
@@ -129,30 +129,22 @@ class BotGalleryWidget(QListWidget):
 
     def update_bot_widget(self, item):
         if item is not None:
-            log.info(f"Updating bot widget to display {item.text()}")
-            bot = self.gallery.bots[item.text()]
-            if bot:
-                self.bot_widget.load_bot(bot)
+            bot_name = item.text()
+            log.info(f"Updating bot widget to display {bot_name}")
+            # bot = self.gallery.bots[item.text()]
+            # if bot:
+            self.bot_widget.display_bot(bot_name)
 
 
 if __name__ == "__main__":
-    from dotenv import load_dotenv
+    from reviver.controller import Controller
+
     from pathlib import Path
-    from os import getenv
 
     archive_dir = Path(Path.home(), "reviver")
-    env_location = Path(archive_dir, ".env")
-    load_dotenv(dotenv_path=env_location)
-    key = getenv("OPEN_ROUTER_API_KEY")
-    spec_sheet = ModelSpecSheet(key)
-
-    # Assuming "gallery" is an instance of BotGallery
-    gallery = BotGallery()
-    gallery.create_new_bot("Bot1", "model1")
-    gallery.create_new_bot("Bot2", "model2")
-    gallery.create_new_bot("Bot3", "model3")
-
-    app = QApplication([])
-    bot_gallery_widget = BotGalleryWidget(gallery, spec_sheet)
+    controller = Controller(archive_dir)
+    controller.add_bot("test_bot")
+    app = QApplication()
+    bot_gallery_widget = BotGalleryWidget(controller)
     bot_gallery_widget.show()
     app.exec()
