@@ -24,7 +24,7 @@ log = reviver.log.get(__name__)
 
 
 class BotWidget(QWidget):
-    def __init__(self, controller=Controller,bot_name=None, parent=None):
+    def __init__(self, controller:Controller,bot_name=None, parent=None):
         super(BotWidget, self).__init__(parent)
         self.controller = controller
 
@@ -52,7 +52,8 @@ class BotWidget(QWidget):
 
         self.place_widgets()
         self.connect_widgets()
-        self.display_bot(bot_name)  # will set self.bot to bot within
+        self.bot_name = bot_name
+        self.display_bot(self.bot_name)  # will set self.bot to bot within
 
     def connect_widgets(self):
         self.expand_button.clicked.connect(self.expand_system_prompt)
@@ -116,7 +117,7 @@ class BotWidget(QWidget):
         return container
 
     def restore_bot(self):
-        self.display_bot(self.bot)
+        self.display_bot(self.bot_name)
 
     def set_all_children_enabled(self,enabled:bool):
         for child in self.children():
@@ -126,6 +127,7 @@ class BotWidget(QWidget):
         
     def display_bot(self, bot_name: str=None):
         if bot_name is not None:
+            self.bot_name=bot_name  # maintain reference for restoring
             bot_data = self.controller.get_bot_data(bot_name)
             set_child_widget_enabled(self,True)
             name= bot_data["name"]
@@ -179,7 +181,7 @@ class BotWidget(QWidget):
             spinbox = layout.itemAt(1).widget()
             return spinbox.value()
 
-        # Update bot object
+        # pull down current parameters of bot
         name = self.name_widget.text()
         model = self.model_name.text()
         system_prompt = self.system_prompt_widget.toPlainText()
@@ -189,6 +191,7 @@ class BotWidget(QWidget):
         frequency_penalty = get_slider_spinbox_value(self.frequency_penalty_widget)
         presence_penalty = get_slider_spinbox_value(self.presence_penalty_widget)
 
+        # update bot
         log.info(f"Directing controller to update Bot {name}")
         self.controller.update_bot(
             name=name,

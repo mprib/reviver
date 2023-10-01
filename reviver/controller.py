@@ -38,16 +38,33 @@ class Controller:
         except:
             pass
         
-        
+    def add_bot(self, bot_name:str)->bool:
+        """
+        boolean return communicates if add was successful
+        """
+        success = self.bot_gallery.create_new_bot(bot_name)
+        self.archive.store_bot_gallery(self.bot_gallery)
+        return success
+    
+    def rename_bot(self, old_name, new_name)->bool:
+        success = self.bot_gallery.rename_bot(old_name,new_name)
+        if success:
+            bot = self.bot_gallery.get_bot(new_name)
+            # note: important to rename bot archive prior to storing it...
+            self.archive.rename_bot(old_name,new_name)        
+            self.archive.store_bot(bot)
+
+        return success
+     
+    def get_ranked_bots(self):
+        log.info("Getting bots by rank")
+        return self.bot_gallery.get_ranked_bots()
+            
     def update_spec_sheet(self):
         self.spec_sheet = ModelSpecSheet(self.key)
 
     def get_spec_sheet(self)->ModelSpecSheet:
         return self.spec_sheet
-    
-    def create_new_conversation(self, bot_id:int):
-        bot = self.archive.get_bot(bot_id)
-    
     
     def get_bot_data(self, bot_name:str)->dict:
         """
@@ -59,10 +76,6 @@ class Controller:
         else:
             return None
     
-    def add_bot(self, name:str):
-        self.bot_gallery.create_new_bot(name=name)
-        self.archive.store_bot_gallery(self.bot_gallery)
-
     def update_bot(self,
                    name:str,
                    model:str,
@@ -87,3 +100,7 @@ class Controller:
             self.archive.store_bot(bot)
         else:
             log.warning(f"No bot by name of {name}")
+            
+    def move_bot(self, old_rank, new_rank):
+        self.bot_gallery.move_bot(old_rank, new_rank)
+        self.archive.store_bot_gallery(self.bot_gallery)
