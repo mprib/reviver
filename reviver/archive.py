@@ -31,12 +31,23 @@ class Archive:
         with open(self.bot_path(bot.name), "w+") as f:
             rtoml.dump(bot_data,f)    
 
+    def rename_bot(self, old_name, new_name):
+        """
+        Renames a bot's toml file.
+        """
+        old_path = self.bot_path(old_name)
+        new_path = self.bot_path(new_name)
+    
+        if old_path.exists():  # Only proceed if the old bot file exists
+            old_path.rename(new_path)
+            log.info(f"Renamed bot {old_name} to {new_name}")
+        else:
+            log.error(f"No bot with the name {old_name} exists")
 
     def store_bot_gallery(self, bot_gallery:BotGallery):
         for bot_id, bot in bot_gallery.bots.items():
             self.store_bot(bot)
             
-    
         
     def load_bot_gallery(self):
         bots = {}
