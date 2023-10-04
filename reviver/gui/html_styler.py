@@ -4,7 +4,6 @@ from pygments import highlight
 from pygments.lexers import get_lexer_by_name, guess_lexer
 from pygments.formatters import HtmlFormatter
 from reviver.conversation import Conversation
-from reviver.message import Message
 from reviver import ROOT
 import markdown
 import reviver.log
@@ -24,7 +23,7 @@ def style_conversation(conversation: Conversation) -> str:
     return convo_html
 
 
-def style_message(msg_id: str, role:str, content:str) -> str:
+def style_message(msg_id: str, role: str, content: str) -> str:
     cleaned_content = close_backticks(content)
     cleaned_content = escape_special_characters(cleaned_content)
     html_content = markdown2html(cleaned_content)
@@ -64,8 +63,9 @@ def escape_special_characters(content: str) -> str:
 
     return content
 
+
 def markdown2html(content: str) -> str:
-    html_version = markdown.markdown( content, extensions=["fenced_code"])
+    html_version = markdown.markdown(content, extensions=["fenced_code"])
     return html_version
 
 
