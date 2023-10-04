@@ -5,26 +5,17 @@ from reviver.bot import Bot
 from queue import Queue
 from threading import Thread
 import time
-from reviver.message import CONTENT_CSS
 from PySide6.QtCore import QObject, Signal
 from os import getenv
 from reviver.message import Message
 
 log = reviver.log.get(__name__)
 
-class QtSignaler(QObject):
-    """
-    Not sure if this is necessary right now...but started building it out...
-    """
-    new_styled_message = Signal(Message) 
-    new_styled_message = Signal(Message) 
-
 @dataclass(frozen=False, slots=True)
 class Conversation:
     bot: Bot 
     title: str = "untitled"
     messages: dict = None
-    qt_signal:QtSignaler = QtSignaler()
 
 
     def __post_init__(self):
@@ -34,9 +25,16 @@ class Conversation:
             prompt_message = Message(role = "system", content=self.bot.system_prompt)
             self.messages[0] = prompt_message
         
-    def add_message(self, msg:Message)->None:
+    def _add_message(self, msg:Message)->None:
         self.messages[self.message_count] = msg
-        self.qt_signal.new_styled_message.emit(msg)        
+    
+    def add_user_message(self, content:str, message_added:Signal=None):
+        new_message =Message(role="user", content=content)
+        self._add_message(new_message)
+        if message_added is not None:
+            log.info(f"Signalling the new message has been added...")
+            message_added.emit(new_message._id,new_message.role, new_message.content)
+
 
     @property
     def message_count(self):
@@ -63,18 +61,9 @@ class Conversation:
             size+=msg.token_size
         return size
     
-    def as_styled_html(self):
-        
-        # combine html into larger doc   
-        joined_html = "<style>" + CONTENT_CSS + "</style>"      
-        for position, msg in self.messages.items():
-            joined_html += msg.as_styled_html()
-        # styled_html = style_code_blocks(joined_html) 
-        styled_html = joined_html
-        return styled_html
         
         
-    def generate_next_message(self, out_q:Queue=None):
+    def generate_reply(self, out_q:Queue=None, message_added:Signal=None, message_updated:Signal=None, message_complete:Signal=None):
         """
         call to API and get next message
         message is added to self.messages
@@ -108,7 +97,9 @@ class Conversation:
 
             # create a new empty message
             new_message = Message(role="assistant", content="")
-            self.add_message(new_message)
+            self._add_message(new_message)
+            if message_added is not None:
+                message_added.emit(new_message._id,new_message.role, new_message.content)
 
             reply = ""
             response_count = 0
@@ -122,7 +113,8 @@ class Conversation:
                             reply += new_word
                             new_message.content = reply
                             time.sleep(.05)
-                            self.qt_signal.new_styled_message.emit(new_message)
+                            if message_updated is not None:
+                                message_updated.emit(new_message._id, new_message.role, new_message.content)
 
                     # below is a quick-and-dirty solution to incorporate the weird output of gpt turbo instruct
                     if "text" in response.choices[0].keys():
@@ -130,11 +122,13 @@ class Conversation:
                         reply += new_word
                         new_message.content = reply
                         time.sleep(.05)
-                        self.qt_signal.new_styled_message.emit(new_message)
+                        if message_updated is not None:
+                            message_updated.emit(new_message._id, new_message.role, new_message.content)
 
             new_message.content = reply 
             log.info(f"New reply is {reply}")
-            self.qt_signal.new_styled_message.emit(new_message)
+            if message_complete is not None:
+                message_complete.emit()
 
             # currently used primarily for testing...might be useful elsewhere
             if out_q is not None:
@@ -151,7 +145,6 @@ class Conversation:
         """
         needed to validate test assertion...and debug archive issues.
         """
-
         if isinstance(other, Conversation):
             bots_equal = self.bot == other.bot
             log.info(f"Bots equal?:{bots_equal}")
@@ -163,3 +156,5 @@ class Conversation:
             log.info(f"Equal?:{equality}")
             return equality
         return False
+    
+    

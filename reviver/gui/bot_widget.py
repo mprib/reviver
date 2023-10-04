@@ -5,7 +5,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QWidget,
     QFormLayout,
-    QLineEdit,
     QTextEdit,
     QSlider,
     QVBoxLayout,
@@ -14,17 +13,15 @@ from PySide6.QtWidgets import (
     QSpinBox,
 )
 from PySide6.QtCore import Qt
-from reviver.bot import Bot
 import reviver.log
 from reviver.gui.models_widget import ModelsWidget
-from reviver.models_data import ModelSpecSheet
 from reviver.controller import Controller
 
 log = reviver.log.get(__name__)
 
 
 class BotWidget(QWidget):
-    def __init__(self, controller:Controller,bot_name=None, parent=None):
+    def __init__(self, controller: Controller, bot_name=None, parent=None):
         super(BotWidget, self).__init__(parent)
         self.controller = controller
 
@@ -119,38 +116,36 @@ class BotWidget(QWidget):
     def restore_bot(self):
         self.display_bot(self.bot_name)
 
-    def set_all_children_enabled(self,enabled:bool):
+    def set_all_children_enabled(self, enabled: bool):
         for child in self.children():
-            if isinstance(child, QWidget): # check if the child is a widget
-                child.setEnabled(enabled) 
-                
-        
-    def display_bot(self, bot_name: str=None):
+            if isinstance(child, QWidget):  # check if the child is a widget
+                child.setEnabled(enabled)
+
+    def display_bot(self, bot_name: str = None):
         if bot_name is not None:
-            self.bot_name=bot_name  # maintain reference for restoring
+            self.bot_name = bot_name  # maintain reference for restoring
             bot_data = self.controller.get_bot_data(bot_name)
-            set_child_widget_enabled(self,True)
-            name= bot_data["name"]
-            model= bot_data["model"]
-            system_prompt= bot_data["system_prompt"]
-            max_tokens= bot_data["max_tokens"]
-            temperature= bot_data["temperature"]
-            top_p= bot_data["top_p"]
-            frequency_penalty= bot_data["frequency_penalty"]
-            presence_penalty= bot_data["presence_penalty"]
+            set_child_widget_enabled(self, True)
+            name = bot_data["name"]
+            model = bot_data["model"]
+            system_prompt = bot_data["system_prompt"]
+            max_tokens = bot_data["max_tokens"]
+            temperature = bot_data["temperature"]
+            top_p = bot_data["top_p"]
+            frequency_penalty = bot_data["frequency_penalty"]
+            presence_penalty = bot_data["presence_penalty"]
         else:
             log.info("Disabling children widgets")
             set_child_widget_enabled(self, False)
-            name=""
-            model=""
-            system_prompt=""
-            max_tokens=0
-            temperature=0
-            top_p=0
-            frequency_penalty=0
-            presence_penalty=0
+            name = ""
+            model = ""
+            system_prompt = ""
+            max_tokens = 0
+            temperature = 0
+            top_p = 0
+            frequency_penalty = 0
+            presence_penalty = 0
 
-            
         def set_slider_spinbox_value(layout, value):
             # Slider is the first child in the layout
             slider = layout.itemAt(0).widget()
@@ -168,12 +163,8 @@ class BotWidget(QWidget):
         set_slider_spinbox_value(self.max_tokens_widget, max_tokens)
         set_slider_spinbox_value(self.temperature_widget, temperature)
         set_slider_spinbox_value(self.top_p_widget, top_p)
-        set_slider_spinbox_value(
-            self.frequency_penalty_widget, frequency_penalty
-        )
-        set_slider_spinbox_value(
-            self.presence_penalty_widget, presence_penalty
-        )
+        set_slider_spinbox_value(self.frequency_penalty_widget, frequency_penalty)
+        set_slider_spinbox_value(self.presence_penalty_widget, presence_penalty)
 
     def update_bot(self):
         def get_slider_spinbox_value(layout):
@@ -194,7 +185,7 @@ class BotWidget(QWidget):
         # update bot
         log.info(f"Directing controller to update Bot {name}")
         self.controller.update_bot(
-            name=name,
+            bot_name=name,
             model=model,
             system_prompt=system_prompt,
             max_tokens=max_tokens,
@@ -247,14 +238,17 @@ class BotWidget(QWidget):
         log.info(f"Setting model name to {model_name}")
         self.model_name.setText(model_name)
 
-def set_child_widget_enabled(parent_widget, enabled:bool):
+
+def set_child_widget_enabled(parent_widget, enabled: bool):
     for child in parent_widget.children():
-        if isinstance(child, QWidget): # check if the child is a widget
+        if isinstance(child, QWidget):  # check if the child is a widget
             child.setEnabled(enabled)
-            set_child_widget_enabled(child, enabled)  # recursively disable grandchildren
+            set_child_widget_enabled(
+                child, enabled
+            )  # recursively disable grandchildren
+
 
 if __name__ == "__main__":
-
     from reviver.controller import Controller
 
     from pathlib import Path

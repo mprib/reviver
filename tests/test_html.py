@@ -1,6 +1,7 @@
 from reviver.conversation import Message, Conversation
 from reviver.bot import Bot
 import reviver.log
+from reviver.gui.html_styler import style_conversation, style_message
 from bs4 import BeautifulSoup
 
 log = reviver.log.get(__name__)
@@ -42,8 +43,10 @@ def test_message_to_html():
     
     msg1 = Message(role = "user", content=content)
 
-    soup = BeautifulSoup(msg1.as_html(), 'html.parser')
-    log.info(msg1.as_html())
+    
+    styled_content =  style_message("1","user", content)
+    soup = BeautifulSoup(styled_content, 'html.parser')
+    log.info(styled_content)
 
     assert(len(soup.find_all('p'))==4)
     assert(len(soup.find_all('h1'))==2)
@@ -56,10 +59,10 @@ def test_conversation_to_html():
     msg1 = Message(role = "user", content=content)
     msg2 = Message(role = "assistant", content=" This is some *stuff*")
 
-    convo.add_message(msg1)
-    convo.add_message(msg2)
+    convo._add_message(msg1)
+    convo._add_message(msg2)
     
-    styled_html = convo.as_styled_html()
+    styled_html = style_conversation(convo)
 
     soup = BeautifulSoup(styled_html, "html.parser")
     log.info(styled_html)

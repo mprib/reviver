@@ -13,8 +13,8 @@ def test_conversation_creation():
     bot = Bot(name="test_bot", model = "llama_70b", rank=1, system_prompt="good bot")
     convo = Conversation(title = "New conversation", bot=bot)
 
-    convo.add_message(msg1)
-    convo.add_message(msg2)
+    convo._add_message(msg1)
+    convo._add_message(msg2)
 
     logger.info(f"conversation list is {convo.messages_prompt}")
     target_list = [
@@ -36,8 +36,8 @@ def test_token_size():
     
 
     system_message = convo.messages[0]
-    convo.add_message(msg1)
-    convo.add_message(msg2)
+    convo._add_message(msg1)
+    convo._add_message(msg2)
 
 
     # three messages are in the conversation now, including the system prompt
