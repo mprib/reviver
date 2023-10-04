@@ -13,10 +13,10 @@ class Archive:
     """
     Aims for simplicity in implementation/auditing/tweaking by storing all data in toml files
     """
-    def __init__(self, reviver_data_dir: Path) -> None:
-        self.reviver_dir = reviver_data_dir
-        self.bots_dir = Path(self.reviver_dir, "bots")
-        self.conversations_dir = Path(self.reviver_dir, "conversations")
+    def __init__(self, data_directory: Path) -> None:
+        self.data_directory = data_directory
+        self.bots_dir = Path(self.data_directory, "bots")
+        self.conversations_dir = Path(self.data_directory, "conversations")
 
         # check that appropriate directories exist
         self.bots_dir.mkdir(parents=True, exist_ok=True)
@@ -30,6 +30,18 @@ class Archive:
         log.info(f"Storing... {bot.name}")
         with open(self.bot_path(bot.name), "w+") as f:
             rtoml.dump(bot_data,f)    
+        
+    def remove_bot(self, bot_name: str) -> None:
+        """
+        Removes a bot's toml file.
+        """
+        bot_path = self.bot_path(bot_name)
+
+        if bot_path.exists():  # Only proceed if the bot file exists
+            bot_path.unlink()  # Delete the file
+            log.info(f"Removed bot {bot_name}")
+        else:
+            log.error(f"No bot with the name {bot_name} exists")
 
     def rename_bot(self, old_name, new_name):
         """
@@ -49,9 +61,9 @@ class Archive:
             self.store_bot(bot)
             
         
-    def load_bot_gallery(self):
+    def get_bot_gallery(self):
         bots = {}
-        for bot_toml in Path(self.reviver_dir, "bots").iterdir():
+        for bot_toml in Path(self.data_directory, "bots").iterdir():
             bot_name = bot_toml.stem
             bot = self.get_bot(bot_name)
             bots[bot_name] = bot
@@ -87,7 +99,7 @@ class Archive:
         with open(convo_path, "w") as f:
             rtoml.dump(convo_data, f)
 
-    def load_conversation(self, convo_title: str, bot_gallery: BotGallery) -> Conversation:
+    def get_conversation(self, convo_title: str, bot_gallery: BotGallery) -> Conversation:
         """
         Loads a conversation from a toml file.
         Requires a BotGallery to find the right bot.
@@ -118,5 +130,7 @@ class Archive:
             messages = messages
         )
 
-        return convo 
-         
+        return convo
+    
+    def get_all_conversations(self)->dict:
+        pass
