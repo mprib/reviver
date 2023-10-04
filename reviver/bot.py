@@ -1,35 +1,33 @@
-from dataclasses import dataclass, asdict, field
-from enum import Enum
+from dataclasses import dataclass, field
 import reviver.log
-log = reviver.log.get(__name__)
 
+log = reviver.log.get(__name__)
 
 
 @dataclass(slots=True)
 class Bot:
-     
-    name:str # must be unique among all bots in user's profile
-    model: str 
-    rank:int # used for ordering bot in list
-    hidden:bool = False # might not want to see a bot in your list
-    system_prompt:str = "you are a helpful assistant"
-    max_tokens:int = 1000
-    temperature:float = 1.0
-    top_p: float =.5
-    frequency_penalty:float =0
-    presence_penalty:float =0
-    
+    name: str  # must be unique among all bots in user's profile
+    model: str
+    rank: int  # used for ordering bot in list
+    hidden: bool = False  # might not want to see a bot in your list
+    system_prompt: str = "you are a helpful assistant"
+    max_tokens: int = 1000
+    temperature: float = 1.0
+    top_p: float = 0.5
+    frequency_penalty: float = 0
+    presence_penalty: float = 0
+
 
 @dataclass
 class BotGallery:
     bots: dict = field(default_factory=dict[str, Bot])
-    
-    def create_new_bot(self, name:str, model:str=None)->bool:
+
+    def create_new_bot(self, name: str, model: str = None) -> bool:
         if name not in self.bots.keys():
-            bot = Bot(name,model, rank=1)
-        
+            bot = Bot(name, model, rank=1)
+
             for name, bt in self.bots.items():
-                bt.rank +=1       
+                bt.rank += 1
 
             self.bots[bot.name] = bot
             log.info(f"bot added:{name}")
@@ -38,8 +36,7 @@ class BotGallery:
             log.warning(f"Bot named {name} not added...name already present")
             return False
 
-    def get_bot(self, bot_name:str)->Bot:
-        
+    def get_bot(self, bot_name: str) -> Bot:
         return self.bots[bot_name]
 
     def move_bot(self, old_rank: Bot, new_rank: int) -> None:
@@ -64,51 +61,51 @@ class BotGallery:
         # Update rank of the moved bot
         bot.rank = new_rank
         log.info(f"Bot {bot.name} moved to rank {bot.rank}.")
-        
-    def lower_rank(self,bot:Bot):
-        swap_bot = self.get_bot_by_rank(bot.rank+1)        
+
+    def lower_rank(self, bot: Bot):
+        swap_bot = self.get_bot_by_rank(bot.rank + 1)
         if swap_bot is not None:
             bot.rank, swap_bot.rank = swap_bot.rank, bot.rank
             log.info(f"Bot {bot.name} is now of rank {bot.rank}")
         else:
-            log.info(f"No bot to swap with") 
+            log.info("No bot to swap with")
 
-    def raise_rank(self,bot:Bot):
-        swap_bot = self.get_bot_by_rank(bot.rank-1)        
+    def raise_rank(self, bot: Bot):
+        swap_bot = self.get_bot_by_rank(bot.rank - 1)
         if swap_bot is not None:
             bot.rank, swap_bot.rank = swap_bot.rank, bot.rank
             log.info(f"Bot {bot.name} is now of rank {bot.rank}")
         else:
-            log.info(f"No bot to swap with") 
+            log.info("No bot to swap with")
 
-    def get_bot_by_rank(self, rank:int)->Bot:
-        
+    def get_bot_by_rank(self, rank: int) -> Bot:
         for name, bot in self.bots.items():
-            if bot.rank==rank:
+            if bot.rank == rank:
                 log.info(f"bot with rank {rank} is {bot.name}")
                 return bot
-        
+
         log.info(f"No bot of rank {rank} identified...returning None")
         return None
-    
 
-    def get_ranked_bots(self)->list[Bot]:
-        return sorted(list(self.bots.values()), key=lambda bot:bot.rank)
-    
-    def rename_bot(self, old_name:str, new_name:str)->bool:
+    def get_ranked_bots(self) -> list[Bot]:
+        return sorted(list(self.bots.values()), key=lambda bot: bot.rank)
+
+    def rename_bot(self, old_name: str, new_name: str) -> bool:
         if new_name not in self.bots.keys():
-            self.bots[oed_name].name = new_name
-            self.bots[new_name]= self.bots.pop(old_name)
-    
-            log.info(f"Renaming {old_name} to {new_name}...current bots are {[bot.name for bot in self.get_ranked_bots()]}")
+            self.bots[old_name].name = new_name
+            self.bots[new_name] = self.bots.pop(old_name)
+
+            log.info(
+                f"Renaming {old_name} to {new_name}...current bots are {[bot.name for bot in self.get_ranked_bots()]}"
+            )
             return True
         else:
             log.warning(f"Name already exists: {new_name}")
             return False
-        
-    def remove_bot(self, bot_name:str):
+
+    def remove_bot(self, bot_name: str):
         self.bots.pop(bot_name)
-    
+
     def rerank_bots(self):
         """
         If a bot has been removed, then good practice to rerank to keep indices continous
@@ -117,6 +114,4 @@ class BotGallery:
         rank = 1
         for bot in self.get_ranked_bots():
             bot.rank = rank
-            rank+=1
-            
-            
+            rank += 1
