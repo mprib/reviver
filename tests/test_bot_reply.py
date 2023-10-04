@@ -27,15 +27,15 @@ def test_bot_reply():
 
     assert(convo.message_count==1) # system prompt
 
-    message1 = Message( role="user", content= "proceed")  
+    # message1 = Message( role="user", content= "proceed")  
 
     log.info("Add user generated message to conversation")
-    convo.add_message(message1)
+    convo.add_user_message("proceed")
 
     stream_q = Queue()
    
     assert(convo.message_count==2) # system prompt + "proceed" 
-    convo.generate_next_message(stream_q)
+    convo.generate_reply(stream_q)
     
     new_message = stream_q.get()
     log.info("Reply came back")

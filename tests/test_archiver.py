@@ -52,7 +52,7 @@ def test_bot_gallery_store_retrieve():
 
     bot_gallery = BotGallery(bots)
     archive.store_bot_gallery(bot_gallery)
-    bot_gallery_copy = archive.load_bot_gallery()
+    bot_gallery_copy = archive.get_bot_gallery()
     assert(bot_gallery==bot_gallery_copy)
 
 
@@ -69,13 +69,13 @@ def test_convo_store_retrieve():
     
     convo = Conversation(bot=bot_1, title="test")
 
-    convo.add_message(msg1)
-    convo.add_message(msg2)
+    convo._add_message(msg1)
+    convo._add_message(msg2)
 
     archive = get_new_test_archiver()
     archive.store_conversation(convo)
 
-    convo_copy = archive.load_conversation(convo_title="test", bot_gallery=bot_gallery)
+    convo_copy = archive.get_conversation(convo_title="test", bot_gallery=bot_gallery)
     assert(convo_copy==convo)
 
 def get_new_test_archiver()->Archive:
