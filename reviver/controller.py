@@ -7,7 +7,7 @@ from dataclasses import asdict
 from reviver.archive import Archive
 import reviver.log
 
-from reviver.bot import Bot, BotGallery
+from reviver.bot import Bot, BotManager
 from reviver.conversation import Conversation
 from dotenv import load_dotenv
 from os import getenv
@@ -37,10 +37,8 @@ class Controller(QObject):
         # load archive if it exists; otherwise creates it
         self.archive = Archive(self.data_directory)
 
-        self.conversations = {}
-        self.active_conversation = None
-
-        self.bot_gallery = self.archive.get_bot_gallery()
+        self.bot_manager = self.archive.get_bot_manager()
+        self.convo_manager = self.archive.get_conversation_manager(self.bot_manager)
 
         # load API key if it's available and use it to set the spec sheet
         try:
@@ -62,19 +60,19 @@ class Controller(QObject):
         """
         boolean return communicates if add was successful
         """
-        success = self.bot_gallery.create_new_bot(bot_name)
-        self.archive.store_bot_gallery(self.bot_gallery)
+        success = self.bot_manager.create_new_bot(bot_name)
+        self.archive.store_bot_manager(self.bot_manager)
         return success
 
     def remove_bot(self, bot_name: str):
-        self.bot_gallery.remove_bot(bot_name)
-        self.bot_gallery.rerank_bots()
+        self.bot_manager.remove_bot(bot_name)
+        self.bot_manager.rerank_bots()
         self.archive.remove_bot(bot_name)
 
     def rename_bot(self, old_name, new_name) -> bool:
-        success = self.bot_gallery.rename_bot(old_name, new_name)
+        success = self.bot_manager.rename_bot(old_name, new_name)
         if success:
-            bot = self.bot_gallery.get_bot(new_name)
+            bot = self.bot_manager.get_bot(new_name)
             # note: important to rename bot archive prior to storing it...
             self.archive.rename_bot(old_name, new_name)
             self.archive.store_bot(bot)
@@ -83,7 +81,7 @@ class Controller(QObject):
 
     def get_ranked_bot_names(self):
         log.info("Getting bots by rank")
-        return [bot.name for bot in self.bot_gallery.get_ranked_bots()]
+        return [bot.name for bot in self.bot_manager.get_ranked_bots()]
 
     def update_spec_sheet(self):
         self.spec_sheet = ModelSpecSheet(self.key)
@@ -95,8 +93,8 @@ class Controller(QObject):
         """
         passes dictionary of bot properties to GUI...does not expose bot to GUI
         """
-        if bot_name in self.bot_gallery.bots.keys():
-            bot = self.bot_gallery.bots[bot_name]
+        if bot_name in self.bot_manager.bots.keys():
+            bot = self.bot_manager.bots[bot_name]
             return asdict(bot)
         else:
             return None
@@ -105,8 +103,8 @@ class Controller(QObject):
         """
         Updates the bot given the name and the properties to update.
         """
-        if bot_name in self.bot_gallery.bots.keys():
-            bot = self.bot_gallery.bots[bot_name]
+        if bot_name in self.bot_manager.bots.keys():
+            bot = self.bot_manager.bots[bot_name]
 
             for key, value in kwargs.items():
                 if hasattr(bot, key):
@@ -120,21 +118,14 @@ class Controller(QObject):
 
 
     def move_bot(self, old_rank, new_rank):
-        self.bot_gallery.move_bot(old_rank, new_rank)
-        self.archive.store_bot_gallery(self.bot_gallery)
+        self.bot_manager.move_bot(old_rank, new_rank)
+        self.archive.store_bot_manager(self.bot_manager)
 
     def start_conversation(self, bot_name: str):
         """ """
-        bot = self.bot_gallery.get_bot(bot_name)
-
-        convo_title = str(datetime.now())
-        for char in [":", " ", ".", "-"]:
-            convo_title = convo_title.replace(char, "")
-
-        convo = Conversation(bot=bot, title=convo_title)
-        self.conversations[convo_title] = convo
-        self.active_conversation = convo
-        self.archive.store_conversation(convo)
+        bot = self.bot_manager.get_bot(bot_name)
+        self.convo_manager.new_active_conversation(bot)
+        self.archive.store_conversation(self.convo_manager.active_conversation)
 
     def store_active_conversation(self):
         self.archive.store_conversation(self.active_conversation)

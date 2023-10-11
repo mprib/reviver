@@ -56,7 +56,7 @@ def test_controller_create_convo():
     
     controller.start_conversation(bot_name="rocket")    
 
-    assert(isinstance(controller.active_conversation, Conversation))
+    assert(isinstance(controller.convo_manager.active_conversation, Conversation))
     # controller.add_new_user_message("Hello! Can you help me?")    
 
 

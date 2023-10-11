@@ -141,6 +141,6 @@ if __name__ == "__main__":
     controller = Controller(archive_dir)
     controller.add_bot("test_bot")
     app = QApplication()
-    bot_gallery_widget = BotGalleryWidget(controller)
-    bot_gallery_widget.show()
+    bot_manager_widget = BotGalleryWidget(controller)
+    bot_manager_widget.show()
     app.exec()
