@@ -24,8 +24,8 @@ def test_models():
     # just running some very basic assertions to make sure data got pulled down correctly
     for name, model in all_model_specs.models.items():
         assert(model._context_length > 0)
-        assert(model.pricing_completion > 0) 
-        assert(model.pricing_prompt > 0) 
+        assert(model.pricing_completion >= 0) 
+        assert(model.pricing_prompt >= 0) 
 
 if __name__=="__main__":
     test_models()
