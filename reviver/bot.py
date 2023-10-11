@@ -19,7 +19,7 @@ class Bot:
 
 
 @dataclass
-class BotGallery:
+class BotManager:
     bots: dict = field(default_factory=dict[str, Bot])
 
     def create_new_bot(self, name: str, model: str = None) -> bool:
