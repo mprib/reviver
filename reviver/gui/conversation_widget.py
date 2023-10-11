@@ -104,6 +104,7 @@ if __name__ == "__main__":
     model = "openai/gpt-3.5-turbo-0301"
     model = "meta-llama/codellama-34b-instruct"
     model = "openai/gpt-4"
+    model = "mistralai/mistral-7b-instruct"
 
     test_dir = Path(ROOT, "tests", "working_delete")
     controller = Controller(test_dir)
