@@ -32,10 +32,13 @@ class Conversation:
         new_message =Message(role="user", content=content)
         self._add_message(new_message)
         if message_added is not None:
-            log.info(f"Signalling the new message has been added...")
+            log.info("Signalling the new message has been added...")
             message_added.emit(new_message._id,new_message.role, new_message.content)
 
-
+    @property
+    def last_update(self):
+        return self.messages[self.message_count-1].time
+        
     @property
     def message_count(self):
         count = len(self.messages.keys())
