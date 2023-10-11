@@ -2,7 +2,8 @@ import reviver.log
 from dataclasses import asdict
 from pathlib import Path
 from reviver.conversation import Conversation, Message
-from reviver.bot import Bot, BotGallery
+from reviver.conversation_manager import ConversationManager
+from reviver.bot import Bot, BotManager
 import rtoml
 
 
@@ -56,20 +57,20 @@ class Archive:
         else:
             log.error(f"No bot with the name {old_name} exists")
 
-    def store_bot_gallery(self, bot_gallery:BotGallery):
-        for bot_id, bot in bot_gallery.bots.items():
+    def store_bot_manager(self, bot_manager:BotManager):
+        for bot_id, bot in bot_manager.bots.items():
             self.store_bot(bot)
             
         
-    def get_bot_gallery(self):
+    def get_bot_manager(self):
         bots = {}
         for bot_toml in Path(self.data_directory, "bots").iterdir():
             bot_name = bot_toml.stem
             bot = self.get_bot(bot_name)
             bots[bot_name] = bot
         
-        bot_gallery = BotGallery(bots)
-        return bot_gallery
+        bot_manager = BotManager(bots)
+        return bot_manager
          
         
     def get_bot(self, bot_name:str) -> Bot:
@@ -99,7 +100,7 @@ class Archive:
         with open(convo_path, "w") as f:
             rtoml.dump(convo_data, f)
 
-    def get_conversation(self, convo_title: str, bot_gallery: BotGallery) -> Conversation:
+    def get_conversation(self, convo_title: str, bot_manager: BotManager) -> Conversation:
         """
         Loads a conversation from a toml file.
         Requires a BotGallery to find the right bot.
@@ -114,7 +115,7 @@ class Archive:
             convo_data = rtoml.load(f)
 
         # Fetch the bot from BotGallery
-        bot = bot_gallery.get_bot(convo_data["bot_name"])
+        bot = bot_manager.get_bot(convo_data["bot_name"])
 
         messages = {}
 
@@ -132,5 +133,17 @@ class Archive:
 
         return convo
     
-    def get_all_conversations(self)->dict:
-        pass
+    def store_all_conversations(self, convo_manager:ConversationManager)->None:
+        for title, conversation in convo_manager.conversations.items():
+            self.store_conversation(conversation)
+            
+    
+    def get_conversation_manager(self, bot_manager:BotManager)->ConversationManager:
+        conversations = {}
+        for convo_toml in Path(self.data_directory, "conversations").iterdir():
+            convo_name = convo_toml.stem
+            convo = self.get_conversation(convo_name, bot_manager)
+            conversations[convo_name] = convo
+        
+        convo_manager = ConversationManager(conversations)
+        return convo_manager
