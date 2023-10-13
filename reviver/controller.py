@@ -131,8 +131,8 @@ class Controller(QObject):
         self.archive.store_conversation(self.active_conversation)
         
     def get_active_conversation_html(self):
-        if self.active_conversation is not None:
-            return style_conversation(self.active_conversation)
+        if self.convo_manager.active_conversation is not None:
+            return style_conversation(self.convo_manager.active_conversation)
         else:
             return None
 
@@ -140,8 +140,8 @@ class Controller(QObject):
         pass
 
     def add_new_user_message(self, content: str):
-        self.active_conversation.add_user_message(content, self.message_added)
-        self.active_conversation.generate_reply(
+        self.convo_manager.active_conversation.add_user_message(content, self.message_added)
+        self.convo_manager.active_conversation.generate_reply(
             message_added=self.message_added,
             message_updated=self.message_updated,
             message_complete=self.message_complete,
