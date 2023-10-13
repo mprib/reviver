@@ -28,6 +28,7 @@ class Controller(QObject):
     message_added = Signal(str, str, str)
     message_updated = Signal(str, str, str)
     message_complete = Signal()
+    new_active_conversation = Signal()
 
     def __init__(self, data_directory: Path) -> None:
         super().__init__()
@@ -136,6 +137,11 @@ class Controller(QObject):
         else:
             return None
 
+    def set_active_conversation(self, conversation_title:str):
+        self.convo_manager.set_active_conversation(conversation_title)
+        self.new_active_conversation.emit()
+
+        
     def rename_conversation(self, old_title, new_title):
         pass
 
@@ -147,3 +153,6 @@ class Controller(QObject):
             message_complete=self.message_complete,
         )
         
+
+    def get_conversation_list(self):
+        return self.convo_manager.get_conversation_list()

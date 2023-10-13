@@ -48,6 +48,7 @@ class ActiveConversationWidget(QWidget):
         # self.controller.message_complete.connect(self.add_message)
         self.controller.message_added.connect(self.add_message)
         self.controller.message_updated.connect(self.update_message)
+        self.controller.new_active_conversation.connect(self.display_active_conversation)
 
     def send_user_message(self):
         log.info(f"Sending: {self.text_entry.toPlainText()}")
