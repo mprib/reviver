@@ -18,7 +18,7 @@ import reviver.log
 log = reviver.log.get(__name__)
 
 
-class ConversationWidget(QWidget):
+class ActiveConversationWidget(QWidget):
     """
     A window to the active conversation in the controller layer
     """
@@ -112,6 +112,6 @@ if __name__ == "__main__":
     controller.add_bot(bot_name)
     controller.update_bot(bot_name, model=model)
     controller.start_conversation(bot_name=bot_name)
-    convo_widget = ConversationWidget(controller)
+    convo_widget = ActiveConversationWidget(controller)
     convo_widget.show()
     app.exec()
