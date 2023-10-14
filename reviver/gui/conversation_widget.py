@@ -1,100 +1,84 @@
-from PySide6.QtWidgets import (
-    QTextEdit,
-    QPushButton,
-    QApplication,
-    QWidget,
-    QVBoxLayout,
-)
-from PySide6.QtWebEngineWidgets import QWebEngineView
-
-# from reviver.conversation import Message, Conversation
-# from reviver.bot import Bot
+from typing import Optional
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QListWidget,QPushButton, QListWidgetItem, QVBoxLayout, QWidget, QHBoxLayout
 from reviver.controller import Controller
-from pathlib import Path
-from reviver import ROOT
-from reviver.gui.html_styler import style_message
-import reviver.log
-
-log = reviver.log.get(__name__)
-
-
-class ConversationWidget(QWidget):
-    """
-    A window to the active conversation in the controller layer
-    """
-
-    def __init__(self, controller: Controller):
+from reviver.gui.active_conversation_widget import ActiveConversationWidget
+class ConversationListView(QWidget):
+    def __init__(self, controller:Controller):
         super().__init__()
         self.controller = controller
-        self.chat_display = QWebEngineView()
-        self.text_entry = QTextEdit()
-        self.send_text = QPushButton("&send")
+        self.list_widget = QListWidget()
+        self.new_convo_btn = QPushButton("New Conversation")  # not yet implemented
 
         self.place_widgets()
         self.connect_widgets()
-        self.display_active_conversation()
-
-    def display_active_conversation(self):
-        self.chat_display.setHtml(self.controller.get_active_conversation_html())
-
+        self.update_conversation_list()
+        # Connect the current item changed signal to update the active conversation
+        self.list_widget.currentItemChanged.connect(self.update_active_conversation)
     def place_widgets(self):
         self.setLayout(QVBoxLayout())
-        self.layout().addWidget(self.chat_display)
-        self.layout().addWidget(self.text_entry)
-        self.layout().addWidget(self.send_text)
+        self.layout().addWidget(self.list_widget)
+        self.layout().addWidget(self.new_convo_btn) 
 
     def connect_widgets(self):
-        self.send_text.clicked.connect(self.send_user_message)
-        # self.controller.message_complete.connect(self.add_message)
-        self.controller.message_added.connect(self.add_message)
-        self.controller.message_updated.connect(self.update_message)
+        self.new_convo_btn.clicked.connect(self.controller.new_active_conversation)
+        pass
+    
+     
+    def update_conversation_list(self):
+        # Clear the list widget
+        self.list_widget.clear()
 
-    def send_user_message(self):
-        log.info(f"Sending: {self.text_entry.toPlainText()}")
-        # self.text_entry.setEnabled(False)
-        # new_message = Message(role="user", content=self.text_entry.toPlainText())
-        content = self.text_entry.toPlainText()
-        log.info(f"Plain text being sent is {content}")
-        self.controller.add_new_user_message(content)
-        self.text_entry.clear()  # no longer needed now that message is created
-        # self.conversation.add_message(new_message)
-        # self.conversation.generate_next_message()
+        # Get the list of conversations
+        conversations = self.controller.get_conversation_list()
 
-    def add_message(self, msg_id: str, role: str, content: str = None):
-        # Add a new message to the end of the conversation
+        # Add each conversation to the list widget
+        for conversation in conversations:
+            item = QListWidgetItem(conversation)
+            self.list_widget.addItem(item)
 
-        if content is None:
-            styled_content = "..."
-        else:
-            styled_content = style_message(msg_id, role, content)
-        log.info(f"Adding new message <div> with id: {msg_id}")
-        js_code = f"""
-        var newElement = document.createElement('div');
-        newElement.id = '{msg_id}';
-        newElement.innerHTML = `{styled_content}`;
-        document.body.appendChild(newElement);
-        window.scrollTo(0, document.body.scrollHeight);
-        """
-        self.chat_display.page().runJavaScript(js_code)
+        # Connect the item clicked signal to set the active conversation
+        self.list_widget.itemClicked.connect(self.set_active_conversation)
 
-    def update_message(self, msg_id: str, role: str, content: str):
-        # if the message has already been added (i.e. it is in progress)
-        # just update the html with the message's styled html
-        # log.info(f"Updating message <div> with id: {msg_id}; html: {styled_html}")
-        if content is None:
-            styled_content = "..."
-        else:
-            styled_content = style_message(msg_id, role, content)
-        js_code = f"""
-        var element = document.getElementById('{msg_id}');
-        element.innerHTML = `{styled_content}`;
-        window.scrollTo(0, document.body.scrollHeight);
-        """
-        self.chat_display.page().runJavaScript(js_code)
+    def set_active_conversation(self, item):
+        conversation_title = item.text()
+        self.controller.set_active_conversation(conversation_title)
+
+    @Slot(QListWidgetItem, QListWidgetItem)
+    def update_active_conversation(self, current: QListWidgetItem, previous: QListWidgetItem):
+        if current is not None:
+            conversation_title = current.text()
+            self.controller.set_active_conversation(conversation_title)
 
 
+class ConversationWidget(QWidget):
+    def __init__(self, controller:Controller):
+        super().__init__()
+        self.controller = controller
+        
+        self.convo_list = ConversationListView(self.controller)
+        self.active_convo = ActiveConversationWidget(self.controller)
+        
+        self.place_widgets()
+        self.connect_widgets()
+        
+    def place_widgets(self):
+        self.setLayout(QHBoxLayout())
+        self.layout().addWidget(self.convo_list)
+        self.layout().addWidget(self.active_convo)
+    
+    def connect_widgets(self):
+        pass
+    
+ 
+            
+        
 if __name__ == "__main__":
     import dotenv
+    from PySide6.QtWidgets import QApplication
+    from pathlib import Path
+    from reviver.controller import Controller
+    from reviver import ROOT
 
     key_location = Path(ROOT, ".env")
     dotenv.load_dotenv(key_location)
@@ -112,6 +96,8 @@ if __name__ == "__main__":
     controller.add_bot(bot_name)
     controller.update_bot(bot_name, model=model)
     controller.start_conversation(bot_name=bot_name)
+    # list_view = ConversationListView(controller)
+    
     convo_widget = ConversationWidget(controller)
     convo_widget.show()
     app.exec()

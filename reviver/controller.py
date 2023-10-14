@@ -28,6 +28,7 @@ class Controller(QObject):
     message_added = Signal(str, str, str)
     message_updated = Signal(str, str, str)
     message_complete = Signal()
+    new_active_conversation = Signal()
 
     def __init__(self, data_directory: Path) -> None:
         super().__init__()
@@ -128,22 +129,30 @@ class Controller(QObject):
         self.archive.store_conversation(self.convo_manager.active_conversation)
 
     def store_active_conversation(self):
-        self.archive.store_conversation(self.active_conversation)
+        self.archive.store_conversation(self.convo_manager.active_conversation)
         
     def get_active_conversation_html(self):
-        if self.active_conversation is not None:
-            return style_conversation(self.active_conversation)
+        if self.convo_manager.active_conversation is not None:
+            return style_conversation(self.convo_manager.active_conversation)
         else:
             return None
 
+    def set_active_conversation(self, conversation_title:str):
+        self.convo_manager.set_active_conversation(conversation_title)
+        self.new_active_conversation.emit()
+
+        
     def rename_conversation(self, old_title, new_title):
         pass
 
     def add_new_user_message(self, content: str):
-        self.active_conversation.add_user_message(content, self.message_added)
-        self.active_conversation.generate_reply(
+        self.convo_manager.active_conversation.add_user_message(content, self.message_added)
+        self.convo_manager.active_conversation.generate_reply(
             message_added=self.message_added,
             message_updated=self.message_updated,
             message_complete=self.message_complete,
         )
         
+
+    def get_conversation_list(self):
+        return self.convo_manager.get_conversation_list()
