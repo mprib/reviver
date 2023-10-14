@@ -1,6 +1,6 @@
 from typing import Optional
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QListWidget, QListWidgetItem, QVBoxLayout, QWidget, QHBoxLayout
+from PySide6.QtWidgets import QListWidget,QPushButton, QListWidgetItem, QVBoxLayout, QWidget, QHBoxLayout
 from reviver.controller import Controller
 from reviver.gui.active_conversation_widget import ActiveConversationWidget
 class ConversationListView(QWidget):
@@ -8,15 +8,23 @@ class ConversationListView(QWidget):
         super().__init__()
         self.controller = controller
         self.list_widget = QListWidget()
+        self.new_convo_btn = QPushButton("New Conversation")  # not yet implemented
 
-        layout = QVBoxLayout()
-        layout.addWidget(self.list_widget)
-        self.setLayout(layout)
-
+        self.place_widgets()
+        self.connect_widgets()
         self.update_conversation_list()
         # Connect the current item changed signal to update the active conversation
         self.list_widget.currentItemChanged.connect(self.update_active_conversation)
-        
+    def place_widgets(self):
+        self.setLayout(QVBoxLayout())
+        self.layout().addWidget(self.list_widget)
+        self.layout().addWidget(self.new_convo_btn) 
+
+    def connect_widgets(self):
+        self.new_convo_btn.clicked.connect(self.controller.new_active_conversation)
+        pass
+    
+     
     def update_conversation_list(self):
         # Clear the list widget
         self.list_widget.clear()
