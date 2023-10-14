@@ -58,8 +58,6 @@ class ActiveConversationWidget(QWidget):
         log.info(f"Plain text being sent is {content}")
         self.controller.add_new_user_message(content)
         self.text_entry.clear()  # no longer needed now that message is created
-        # self.conversation.add_message(new_message)
-        # self.conversation.generate_next_message()
 
     def add_message(self, msg_id: str, role: str, content: str = None):
         # Add a new message to the end of the conversation
