@@ -129,7 +129,7 @@ class Controller(QObject):
         self.archive.store_conversation(self.convo_manager.active_conversation)
 
     def store_active_conversation(self):
-        self.archive.store_conversation(self.active_conversation)
+        self.archive.store_conversation(self.convo_manager.active_conversation)
         
     def get_active_conversation_html(self):
         if self.convo_manager.active_conversation is not None:
