@@ -28,7 +28,7 @@ class Controller(QObject):
     message_added = Signal(str, str, str)
     message_updated = Signal(str, str, str)
     message_complete = Signal()
-    new_active_conversation = Signal()
+    refresh_active_conversation = Signal()
 
     def __init__(self, data_directory: Path) -> None:
         super().__init__()
@@ -39,6 +39,7 @@ class Controller(QObject):
         self.archive = Archive(self.data_directory)
 
         self.bot_manager = self.archive.get_bot_manager()
+        # 
         self.convo_manager = self.archive.get_conversation_manager(self.bot_manager)
 
         # load API key if it's available and use it to set the spec sheet
@@ -56,6 +57,15 @@ class Controller(QObject):
         self.message_complete.connect(self.store_active_conversation)
         self.message_added.connect(self.store_active_conversation)
 
+    def set_active_bot(self, bot_name):
+        self.active_bot_name = bot_name
+        bot = self.bot_manager.get_bot(self.active_bot_name)
+        # if self.convo_manager.active_conversation is not None:
+        self.convo_manager.active_conversation.bot = bot
+        
+        # pass in message added signal
+        self.convo_manager.active_conversation.update_system_prompt(self.refresh_active_conversation)
+        self.store_active_conversation()
 
     def add_bot(self, bot_name: str) -> bool:
         """
@@ -80,16 +90,6 @@ class Controller(QObject):
 
         return success
 
-    def get_ranked_bot_names(self):
-        log.info("Getting bots by rank")
-        return [bot.name for bot in self.bot_manager.get_ranked_bots()]
-
-    def update_spec_sheet(self):
-        self.spec_sheet = ModelSpecSheet(self.key)
-
-    def get_spec_sheet(self) -> ModelSpecSheet:
-        return self.spec_sheet
-
     def get_bot_data(self, bot_name: str) -> dict:
         """
         passes dictionary of bot properties to GUI...does not expose bot to GUI
@@ -103,6 +103,8 @@ class Controller(QObject):
     def update_bot(self, bot_name: str, **kwargs):
         """
         Updates the bot given the name and the properties to update.
+        Note that current implementation uses kwargs (might be a mistake)
+        All arguments (other than bot_name) must be passed in with argument name
         """
         if bot_name in self.bot_manager.bots.keys():
             bot = self.bot_manager.bots[bot_name]
@@ -122,24 +124,42 @@ class Controller(QObject):
         self.bot_manager.move_bot(old_rank, new_rank)
         self.archive.store_bot_manager(self.bot_manager)
 
+    def get_ranked_bot_names(self):
+        log.info("Getting bots by rank")
+        return [bot.name for bot in self.bot_manager.get_ranked_bots()]
+
+    def update_spec_sheet(self):
+        self.spec_sheet = ModelSpecSheet(self.key)
+
+    def get_spec_sheet(self) -> ModelSpecSheet:
+        return self.spec_sheet
+
+
     def start_conversation(self, bot_name: str):
         """ """
         bot = self.bot_manager.get_bot(bot_name)
+        self.active_bot_name = bot_name
         self.convo_manager.new_active_conversation(bot)
         self.archive.store_conversation(self.convo_manager.active_conversation)
 
     def store_active_conversation(self):
         self.archive.store_conversation(self.convo_manager.active_conversation)
-        
+    
+    def get_active_bot_name(self):
+        if self.convo_manager.active_conversation is not None:
+            return self.convo_manager.active_conversation.bot.name
+        else:
+            return None
+     
     def get_active_conversation_html(self):
         if self.convo_manager.active_conversation is not None:
             return style_conversation(self.convo_manager.active_conversation)
         else:
-            return None
+            return "Create new conversation to begin"
 
     def set_active_conversation(self, conversation_title:str):
         self.convo_manager.set_active_conversation(conversation_title)
-        self.new_active_conversation.emit()
+        self.refresh_active_conversation.emit()
 
         
     def rename_conversation(self, old_title, new_title):
