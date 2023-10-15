@@ -1,7 +1,9 @@
+from typing import Optional
 from PySide6.QtWidgets import (
     QTextEdit,
     QPushButton,
     QApplication,
+    QComboBox,
     QWidget,
     QVBoxLayout,
 )
@@ -18,6 +20,19 @@ import reviver.log
 log = reviver.log.get(__name__)
 
 
+class ActiveBotComboBox(QComboBox):
+    def __init__(self, controller:Controller):
+        super().__init__()
+        self.controller = controller
+        self.currentTextChanged.connect(self.controller.set_active_bot)
+        self.update()
+     
+    def update(self):
+        for bot_name in self.controller.get_ranked_bot_names():
+            self.addItem(bot_name)
+    
+            
+
 class ActiveConversationWidget(QWidget):
     """
     A window to the active conversation in the controller layer
@@ -26,6 +41,7 @@ class ActiveConversationWidget(QWidget):
     def __init__(self, controller: Controller):
         super().__init__()
         self.controller = controller
+        self.bot_select = ActiveBotComboBox(self.controller)
         self.chat_display = QWebEngineView()
         self.text_entry = QTextEdit()
         self.send_text = QPushButton("&send")
@@ -35,10 +51,13 @@ class ActiveConversationWidget(QWidget):
         self.display_active_conversation()
 
     def display_active_conversation(self):
+        log.info(f"Active bot name being set to {self.controller.get_active_bot_name()}")
+        self.bot_select.setCurrentText(self.controller.get_active_bot_name())
         self.chat_display.setHtml(self.controller.get_active_conversation_html())
 
     def place_widgets(self):
         self.setLayout(QVBoxLayout())
+        self.layout().addWidget(self.bot_select)
         self.layout().addWidget(self.chat_display)
         self.layout().addWidget(self.text_entry)
         self.layout().addWidget(self.send_text)
@@ -48,8 +67,9 @@ class ActiveConversationWidget(QWidget):
         # self.controller.message_complete.connect(self.add_message)
         self.controller.message_added.connect(self.add_message)
         self.controller.message_updated.connect(self.update_message)
-        self.controller.new_active_conversation.connect(self.display_active_conversation)
+        self.controller.refresh_active_conversation.connect(self.display_active_conversation)
 
+    
     def send_user_message(self):
         log.info(f"Sending: {self.text_entry.toPlainText()}")
         # self.text_entry.setEnabled(False)
@@ -101,15 +121,20 @@ if __name__ == "__main__":
     app = QApplication([])
 
     model = "openai/gpt-3.5-turbo-0301"
-    model = "meta-llama/codellama-34b-instruct"
     model = "openai/gpt-4"
-    model = "mistralai/mistral-7b-instruct"
 
     test_dir = Path(ROOT, "tests", "working_delete")
     controller = Controller(test_dir)
-    bot_name = "test_bot"
+    bot_name = "mistral"
+    model = "mistralai/mistral-7b-instruct"
     controller.add_bot(bot_name)
     controller.update_bot(bot_name, model=model)
+    
+    model = "meta-llama/codellama-34b-instruct"
+    bot_name = "code_llama"
+    controller.add_bot(bot_name)
+    controller.update_bot(bot_name,model = model)
+
     controller.start_conversation(bot_name=bot_name)
     convo_widget = ActiveConversationWidget(controller)
     convo_widget.show()
