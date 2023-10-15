@@ -98,11 +98,20 @@ def test_conversation_start():
 
     assert(convo_manager.conversations['Convo 1'] != convo_manager.conversations['Convo 2'])
 
-    
+def test_update_system_prompt():
+    good_prompt = "You are a good bot"
+    bot = Bot("test_bot", model="test_model", system_prompt=good_prompt,rank=1)    
+    convo = Conversation(bot, title="test_convo")
+    assert(convo.messages[0].content==good_prompt)
+    evil_prompt = "You are an evil bot"
+    bot.system_prompt = evil_prompt
+    convo.update_system_prompt()
+    assert(convo.messages[0].content==evil_prompt)
 
 
 if __name__ == "__main__":
-    test_conversation_creation()
-    test_token_size()
-    test_conversation_list_order()
-    test_conversation_start()
+    # test_conversation_creation()
+    # test_token_size()
+    # test_conversation_list_order()
+    # test_conversation_start()
+    test_update_system_prompt()

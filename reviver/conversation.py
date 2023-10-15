@@ -21,13 +21,26 @@ class Conversation:
     def __post_init__(self):
         if self.messages is None:
             self.messages = {}
-            #only create a new prompt message if you aren't loading in from the archive...
-            prompt_message = Message(role = "system", content=self.bot.system_prompt)
-            self.messages[0] = prompt_message
+        
+        # Note this will override a previous system prompt if the bot or bot prompt have changed
+        self.update_system_prompt()
+
+    def update_system_prompt(self, refresh_conversation:Signal=None):       
+        if 0 in self.messages.keys():
+            log.info(f"Updating system prompt for {self.title}")
+            prompt_message_time = self.messages[0].time
+        else:
+            prompt_message_time = None # message will default to current time
+
+        prompt_message = Message(role = "system", content=self.bot.system_prompt, time=prompt_message_time)
+        self.messages[0] = prompt_message
+        if refresh_conversation is not None:
+            refresh_conversation.emit()
+        
         
     def _add_message(self, msg:Message)->None:
         self.messages[self.message_count] = msg
-    
+            
     def add_user_message(self, content:str, message_added:Signal=None):
         new_message =Message(role="user", content=content)
         self._add_message(new_message)
@@ -143,6 +156,7 @@ class Conversation:
         thread = Thread(target=worker,args=[],daemon=True )
         thread.start()
 
+        
 
     def __eq__(self, other):
         """

@@ -24,8 +24,9 @@ class BotManager:
 
     def create_new_bot(self, name: str, model: str = None) -> bool:
         if name not in self.bots.keys():
-            bot = Bot(name, model, rank=1)
+            bot = Bot(name, model, rank=1) # new bot always at top
 
+            # push all other bots down in rank
             for name, bt in self.bots.items():
                 bt.rank += 1
 
@@ -37,6 +38,17 @@ class BotManager:
             return False
 
     def get_bot(self, bot_name: str) -> Bot:
+        """
+        If a bot exists, then it will return that bot,
+        otherwise it will create a stock bot of that name and load it in.
+        This is a work around for issues where a bot is deleted
+        but conversations with that bot persist.
+        
+        """
+        if bot_name not in self.bots.keys():
+            log.warn(f"{bot_name} not in bot manager... creating default bot of same name")
+            self.create_new_bot(bot_name)
+            
         return self.bots[bot_name]
 
     def move_bot(self, old_rank: Bot, new_rank: int) -> None:
