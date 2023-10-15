@@ -21,7 +21,7 @@ class ConversationListView(QWidget):
         self.layout().addWidget(self.new_convo_btn) 
 
     def connect_widgets(self):
-        self.new_convo_btn.clicked.connect(self.controller.new_active_conversation)
+        # self.new_convo_btn.clicked.connect(self.controller.refresh_active_conversation)
         pass
     
      
@@ -92,10 +92,10 @@ if __name__ == "__main__":
 
     test_dir = Path(ROOT, "tests", "working_delete")
     controller = Controller(test_dir)
-    bot_name = "test_bot"
-    controller.add_bot(bot_name)
-    controller.update_bot(bot_name, model=model)
-    controller.start_conversation(bot_name=bot_name)
+    # bot_name = "test_bot"
+    # controller.add_bot(bot_name)
+    # controller.update_bot(bot_name, model=model)
+    # controller.start_conversation(bot_name=bot_name)
     # list_view = ConversationListView(controller)
     
     convo_widget = ConversationWidget(controller)
