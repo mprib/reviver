@@ -3,6 +3,9 @@ from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QListWidget,QPushButton, QListWidgetItem, QVBoxLayout, QWidget, QHBoxLayout
 from reviver.controller import Controller
 from reviver.gui.active_conversation_widget import ActiveConversationWidget
+import reviver.log
+log = reviver.log.get(__name__)
+
 class ConversationListView(QWidget):
     def __init__(self, controller:Controller):
         super().__init__()
@@ -21,9 +24,8 @@ class ConversationListView(QWidget):
         self.layout().addWidget(self.new_convo_btn) 
 
     def connect_widgets(self):
-        # self.new_convo_btn.clicked.connect(self.controller.refresh_active_conversation)
-        pass
-    
+        self.controller.refresh_active_conversation.connect(self.update_conversation_list)
+   
      
     def update_conversation_list(self):
         # Clear the list widget
@@ -68,10 +70,15 @@ class ConversationWidget(QWidget):
         self.layout().addWidget(self.active_convo)
     
     def connect_widgets(self):
+        self.convo_list.new_convo_btn.clicked.connect(self.start_new_convo_with_active_bot)
         pass
     
  
-            
+    def start_new_convo_with_active_bot(self):
+        bot_name = self.controller.get_active_bot_name()
+        log.info(f"Starting new conversation with active bot: {bot_name}") 
+        self.controller.start_conversation(bot_name)
+
         
 if __name__ == "__main__":
     import dotenv

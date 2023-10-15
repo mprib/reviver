@@ -141,6 +141,7 @@ class Controller(QObject):
         self.active_bot_name = bot_name
         self.convo_manager.new_active_conversation(bot)
         self.archive.store_conversation(self.convo_manager.active_conversation)
+        self.refresh_active_conversation.emit()
 
     def store_active_conversation(self):
         self.archive.store_conversation(self.convo_manager.active_conversation)
