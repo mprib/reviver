@@ -11,6 +11,8 @@ from os import getenv
 from datetime import datetime
 from reviver.message import Message
 from reviver.conversation import Conversation
+import reviver.log
+log = reviver.log.get(__name__)
 
 @dataclass(frozen=False, slots=True)
 class ConversationManager:
@@ -46,11 +48,12 @@ class ConversationManager:
 
         return conversation_titles
     
-    def new_active_conversation(self,bot:Bot)->None:
+    def new_active_conversation(self,bot:Bot):
         """
         When starting a conversation it will always become the 
         active conversation
         """
+
         convo_title = str(datetime.now())
         for char in [":", " ", ".", "-"]:
             convo_title = convo_title.replace(char, "")
@@ -58,7 +61,7 @@ class ConversationManager:
         convo = Conversation(bot=bot, title=convo_title)
         self.conversations[convo_title] = convo
         self.active_conversation = convo
-
+    
 
     def set_active_conversation(self, convo_title):
         self.active_conversation = self.conversations[convo_title]
