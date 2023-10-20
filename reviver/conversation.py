@@ -25,7 +25,7 @@ class Conversation:
         # Note this will override a previous system prompt if the bot or bot prompt have changed
         self.update_system_prompt()
 
-    def update_system_prompt(self, refresh_conversation:Signal=None):       
+    def update_system_prompt(self): # , refresh_conversation:Signal=None):       
         if 0 in self.messages.keys():
             log.info(f"Updating system prompt for {self.title}")
             prompt_message_time = self.messages[0].time
@@ -34,9 +34,6 @@ class Conversation:
 
         prompt_message = Message(role = "system", content=self.bot.system_prompt, time=prompt_message_time)
         self.messages[0] = prompt_message
-        if refresh_conversation is not None:
-            refresh_conversation.emit()
-        
         
     def _add_message(self, msg:Message)->None:
         self.messages[self.message_count] = msg
