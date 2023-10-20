@@ -29,6 +29,8 @@ class Controller(QObject):
     message_updated = Signal(str, str, str)
     message_complete = Signal()
     refresh_active_conversation = Signal()
+    new_active_conversation = Signal()
+
 
     def __init__(self, data_directory: Path) -> None:
         super().__init__()
@@ -58,14 +60,16 @@ class Controller(QObject):
         self.message_added.connect(self.store_active_conversation)
 
     def set_active_bot(self, bot_name):
-        self.active_bot_name = bot_name
-        bot = self.bot_manager.get_bot(self.active_bot_name)
-        # if self.convo_manager.active_conversation is not None:
-        self.convo_manager.active_conversation.bot = bot
+        if bot_name:
+            log.info(f"Setting active bot to {bot_name}")
+            self.active_bot_name = bot_name
+            bot = self.bot_manager.get_bot(self.active_bot_name)
+            # if self.convo_manager.active_conversation is not None:
+            self.convo_manager.active_conversation.bot = bot
         
-        # pass in message added signal
-        self.convo_manager.active_conversation.update_system_prompt(self.refresh_active_conversation)
-        self.store_active_conversation()
+            # pass in message added signal
+            self.convo_manager.active_conversation.update_system_prompt() # self.refresh_active_conversation)
+            self.store_active_conversation()
 
     def add_bot(self, bot_name: str) -> bool:
         """
@@ -141,7 +145,7 @@ class Controller(QObject):
         self.active_bot_name = bot_name
         self.convo_manager.new_active_conversation(bot)
         self.archive.store_conversation(self.convo_manager.active_conversation)
-        self.refresh_active_conversation.emit()
+        self.new_active_conversation.emit()
 
     def store_active_conversation(self):
         self.archive.store_conversation(self.convo_manager.active_conversation)
@@ -160,9 +164,15 @@ class Controller(QObject):
 
     def set_active_conversation(self, conversation_title:str):
         self.convo_manager.set_active_conversation(conversation_title)
-        self.refresh_active_conversation.emit()
+        self.new_active_conversation.emit()
 
-        
+
+    def get_active_conversation_title(self):
+        title = None
+        if self.convo_manager.active_conversation is not None:
+            title = self.convo_manager.active_conversation.title
+        return title
+     
     def rename_conversation(self, old_title, new_title):
         pass
 
