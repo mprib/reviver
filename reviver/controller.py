@@ -68,7 +68,8 @@ class Controller(QObject):
             self.convo_manager.active_conversation.bot = bot
         
             # pass in message added signal
-            self.convo_manager.active_conversation.update_system_prompt() # self.refresh_active_conversation)
+            self.convo_manager.active_conversation.update_system_prompt() 
+            self.refresh_active_conversation.emit()
             self.store_active_conversation()
 
     def add_bot(self, bot_name: str) -> bool:
