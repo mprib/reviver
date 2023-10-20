@@ -1,33 +1,49 @@
 from typing import Optional
-from PySide6.QtCore import Slot
+
+from PySide6.QtCore import Slot, Qt, Signal
 from PySide6.QtWidgets import QListWidget,QPushButton, QListWidgetItem, QVBoxLayout, QWidget, QHBoxLayout
 from reviver.controller import Controller
 from reviver.gui.active_conversation_widget import ActiveConversationWidget
 import reviver.log
 log = reviver.log.get(__name__)
 
+class MyListWidget(QListWidget):
+    def keyPressEvent(self, event):
+        super().keyPressEvent(event)
+        if event.key() == Qt.Key_Up or event.key() == Qt.Key_Down:
+            self.itemClicked.emit(self.currentItem())
+
 class ConversationListView(QWidget):
     def __init__(self, controller:Controller):
         super().__init__()
         self.controller = controller
-        self.list_widget = QListWidget()
+        self.list_widget = MyListWidget()
         self.new_convo_btn = QPushButton("New Conversation")  # not yet implemented
 
         self.place_widgets()
         self.connect_widgets()
         self.update_conversation_list()
-        # Connect the current item changed signal to update the active conversation
-        self.list_widget.currentItemChanged.connect(self.update_active_conversation)
+
     def place_widgets(self):
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self.list_widget)
         self.layout().addWidget(self.new_convo_btn) 
 
     def connect_widgets(self):
-        self.controller.refresh_active_conversation.connect(self.update_conversation_list)
-   
-     
+        # Connect the item clicked signal to set the active conversation
+        self.new_convo_btn.clicked.connect(self.start_new_convo_with_active_bot)
+        # self.list_widget.currentItemChanged.connect(self.set_active_conversation)
+        # self.list_widget.currentItemChanged.connect(self.set_active_conversation)
+        self.list_widget.itemClicked.connect(self.set_active_conversation)
+        self.controller.new_active_conversation.connect(self.update_conversation_list) 
+
+    def start_new_convo_with_active_bot(self):
+        bot_name = self.controller.get_active_bot_name()
+        log.info(f"Starting new conversation with active bot: {bot_name}") 
+        self.controller.start_conversation(bot_name)
+
     def update_conversation_list(self):
+
         # Clear the list widget
         self.list_widget.clear()
 
@@ -39,17 +55,19 @@ class ConversationListView(QWidget):
             item = QListWidgetItem(conversation)
             self.list_widget.addItem(item)
 
-        # Connect the item clicked signal to set the active conversation
-        self.list_widget.itemClicked.connect(self.set_active_conversation)
+        conversation_title = self.controller.get_active_conversation_title()
+        # log.info(f"Active conversation is {conversation_title}")
 
+        items = self.list_widget.findItems(conversation_title, Qt.MatchExactly)
+        if items:
+            log.info(f"Attempting to set highlighted list item to {conversation_title}")
+            self.list_widget.setCurrentItem(items[0])        
+
+        
     def set_active_conversation(self, item):
-        conversation_title = item.text()
-        self.controller.set_active_conversation(conversation_title)
-
-    @Slot(QListWidgetItem, QListWidgetItem)
-    def update_active_conversation(self, current: QListWidgetItem, previous: QListWidgetItem):
-        if current is not None:
-            conversation_title = current.text()
+        if item is not None:
+            conversation_title = item.text()
+            log.info(f"Attempting to set active conversation to {conversation_title}")
             self.controller.set_active_conversation(conversation_title)
 
 
@@ -70,14 +88,9 @@ class ConversationWidget(QWidget):
         self.layout().addWidget(self.active_convo)
     
     def connect_widgets(self):
-        self.convo_list.new_convo_btn.clicked.connect(self.start_new_convo_with_active_bot)
         pass
     
  
-    def start_new_convo_with_active_bot(self):
-        bot_name = self.controller.get_active_bot_name()
-        log.info(f"Starting new conversation with active bot: {bot_name}") 
-        self.controller.start_conversation(bot_name)
 
         
 if __name__ == "__main__":
@@ -97,7 +110,8 @@ if __name__ == "__main__":
     model = "openai/gpt-4"
     model = "mistralai/mistral-7b-instruct"
 
-    test_dir = Path(ROOT, "tests", "working_delete")
+    test_dir = Path(Path.home(), "reviver")
+    # test_dir = Path(ROOT, "tests", "working_delete")
     controller = Controller(test_dir)
     # bot_name = "test_bot"
     # controller.add_bot(bot_name)
