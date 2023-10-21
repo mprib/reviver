@@ -26,7 +26,9 @@ class ConversationManager:
 
     def __post_init__(self):
         if self.active_conversation is None:
-            self.set_active_conversation(self.get_conversation_list()[0])
+            convo_list = self.get_conversation_list()
+            if len(convo_list)>0:
+                self.set_active_conversation(convo_list[0])
             
     def _add_conversation(self, convo:Conversation)->None:
         self.conversations[convo.title] = convo
