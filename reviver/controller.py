@@ -132,7 +132,9 @@ class Controller(QObject):
                     log.warning(f"Bot does not have property {key}")
 
             # system prompt may have changed
-            self.convo_manager.active_conversation.update_system_prompt() 
+            if self.convo_manager.active_conversation is not None:
+                self.convo_manager.active_conversation.update_system_prompt() 
+
             self.bots_updated.emit()
             self.archive.store_bot(bot)
         else:
