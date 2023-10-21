@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
     QWidget,
+    QHBoxLayout,
     QVBoxLayout,
 )
 from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -15,6 +16,7 @@ from reviver.controller import Controller
 from pathlib import Path
 from reviver import ROOT
 from reviver.gui.html_styler import style_message
+from reviver.gui.bot_manager_widget import BotGalleryWidget
 import reviver.log
 
 log = reviver.log.get(__name__)
@@ -28,6 +30,7 @@ class ActiveBotComboBox(QComboBox):
         self.update()
      
     def update(self):
+        self.clear()
         for bot_name in self.controller.get_ranked_bot_names():
             self.addItem(bot_name)
     
@@ -42,6 +45,7 @@ class ActiveConversationWidget(QWidget):
         super().__init__()
         self.controller = controller
         self.bot_select = ActiveBotComboBox(self.controller)
+        self.bot_edit_btn = QPushButton(f"Bot")
         self.chat_display = QWebEngineView()
         self.text_entry = QTextEdit()
         self.send_text = QPushButton("&send")
@@ -57,19 +61,30 @@ class ActiveConversationWidget(QWidget):
 
     def place_widgets(self):
         self.setLayout(QVBoxLayout())
-        self.layout().addWidget(self.bot_select)
+        
+        self.bot_header = QHBoxLayout()
+        self.bot_header.addWidget(self.bot_select) 
+        self.bot_header.addWidget(self.bot_edit_btn)
+
+        self.layout().addLayout(self.bot_header)
         self.layout().addWidget(self.chat_display)
         self.layout().addWidget(self.text_entry)
         self.layout().addWidget(self.send_text)
 
     def connect_widgets(self):
         self.send_text.clicked.connect(self.send_user_message)
+        self.bot_edit_btn.clicked.connect(self.launch_bot_manager)
         # self.controller.message_complete.connect(self.add_message)
         self.controller.message_added.connect(self.add_message)
         self.controller.message_updated.connect(self.update_message)
         self.controller.refresh_active_conversation.connect(self.display_active_conversation)
         self.controller.new_active_conversation.connect(self.display_active_conversation)
+        self.controller.bots_updated.connect(self.display_active_conversation)
     
+    def launch_bot_manager(self):
+        self.bot_manager = BotGalleryWidget(self.controller)
+        self.bot_manager.show()
+         
     def send_user_message(self):
         log.info(f"Sending: {self.text_entry.toPlainText()}")
         # self.text_entry.setEnabled(False)
