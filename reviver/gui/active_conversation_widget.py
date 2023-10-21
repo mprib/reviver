@@ -28,7 +28,10 @@ class ActiveBotComboBox(QComboBox):
         self.controller = controller
         self.currentTextChanged.connect(self.controller.set_active_bot)
         self.update()
-     
+
+    def connect_widgets(self):
+        self.controller.bots_updated.connect(self.update)     
+
     def update(self):
         self.clear()
         for bot_name in self.controller.get_ranked_bot_names():
