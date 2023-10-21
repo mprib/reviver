@@ -30,6 +30,7 @@ class Controller(QObject):
     message_complete = Signal()
     refresh_active_conversation = Signal()
     new_active_conversation = Signal()
+    bots_updated = Signal()
 
 
     def __init__(self, data_directory: Path) -> None:
@@ -56,6 +57,13 @@ class Controller(QObject):
         self.connect_signals()
         
     def connect_signals(self):
+        """
+        I suspect that this is a poor use of the Signaling mechanism
+        This is something that needs to be changes, likely using Queues to 
+        communicate between the model and controller and then signals to communicate
+        between the controller and the view        
+        """
+
         self.message_complete.connect(self.store_active_conversation)
         self.message_added.connect(self.store_active_conversation)
 
@@ -70,6 +78,7 @@ class Controller(QObject):
             # pass in message added signal
             self.convo_manager.active_conversation.update_system_prompt() 
             self.refresh_active_conversation.emit()
+            self.bots_updated.emit()
             self.store_active_conversation()
 
     def add_bot(self, bot_name: str) -> bool:
@@ -77,6 +86,7 @@ class Controller(QObject):
         boolean return communicates if add was successful
         """
         success = self.bot_manager.create_new_bot(bot_name)
+        self.bots_updated.emit()
         self.archive.store_bot_manager(self.bot_manager)
         return success
 
@@ -91,8 +101,9 @@ class Controller(QObject):
             bot = self.bot_manager.get_bot(new_name)
             # note: important to rename bot archive prior to storing it...
             self.archive.rename_bot(old_name, new_name)
+            self.bots_updated.emit()
             self.archive.store_bot(bot)
-
+            
         return success
 
     def get_bot_data(self, bot_name: str) -> dict:
@@ -120,6 +131,9 @@ class Controller(QObject):
                 else:
                     log.warning(f"Bot does not have property {key}")
 
+            # system prompt may have changed
+            self.convo_manager.active_conversation.update_system_prompt() 
+            self.bots_updated.emit()
             self.archive.store_bot(bot)
         else:
             log.warning(f"No bot by name of {bot_name}")
@@ -128,6 +142,7 @@ class Controller(QObject):
     def move_bot(self, old_rank, new_rank):
         self.bot_manager.move_bot(old_rank, new_rank)
         self.archive.store_bot_manager(self.bot_manager)
+        self.bots_updated.emit()
 
     def get_ranked_bot_names(self):
         log.info("Getting bots by rank")
