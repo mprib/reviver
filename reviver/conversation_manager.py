@@ -23,7 +23,11 @@ class ConversationManager:
 
     conversations: dict = field(default_factory=dict[str,Conversation])
     active_conversation:Conversation = None    
-    
+
+    def __post_init__(self):
+        if self.active_conversation is None:
+            self.set_active_conversation(self.get_conversation_list()[0])
+            
     def _add_conversation(self, convo:Conversation)->None:
         self.conversations[convo.title] = convo
     
