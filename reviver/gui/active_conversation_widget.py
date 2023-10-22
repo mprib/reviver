@@ -30,7 +30,7 @@ class ActiveBotComboBox(QComboBox):
         self.update()
 
     def connect_widgets(self):
-        self.currentTextChanged.connect(self.controller.set_active_bot)
+        self.currentTextChanged.connect(self.controller.set_active_convo_bot)
         self.controller.bot_added.connect(self.update)     
         self.controller.bots_reordered.connect(self.update)
 

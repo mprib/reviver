@@ -67,13 +67,14 @@ class Controller(QObject):
         self.message_complete.connect(self.store_active_conversation)
         self.message_added.connect(self.store_active_conversation)
 
-    def set_active_bot(self, bot_name):
+    def set_active_convo_bot(self, bot_name):
         if bot_name:
             log.info(f"Setting active bot to {bot_name}")
-            self.active_bot_name = bot_name
-            bot = self.bot_manager.get_bot(self.active_bot_name)
+            # self.active_bot_name = bot_name
+            bot = self.bot_manager.get_bot(bot_name)
             # if self.convo_manager.active_conversation is not None:
             self.convo_manager.active_conversation.bot = bot
+            self.set_selected_bot(bot_name)
         
             # pass in message added signal
             self.convo_manager.active_conversation.update_system_prompt() 
@@ -119,6 +120,16 @@ class Controller(QObject):
         else:
             return None
 
+    def set_selected_bot(self,bot_name):
+        bot = self.bot_manager.get_bot(bot_name)
+        self.bot_manager.selected_bot = bot
+        
+    def get_selected_bot_name(self):
+        """
+        If not bots yet, then this will be None
+        """
+        return self.bot_manager.selected_bot.name
+
     def update_bot(self, bot_name: str, **kwargs):
         """
         Updates the bot given the name and the properties to update.
@@ -163,7 +174,7 @@ class Controller(QObject):
     def start_conversation(self, bot_name: str):
         """ """
         bot = self.bot_manager.get_bot(bot_name)
-        self.active_bot_name = bot_name
+        # self.active_bot_name = bot_name
         self.convo_manager.new_active_conversation(bot)
         self.archive.store_conversation(self.convo_manager.active_conversation)
         self.new_active_conversation.emit()
