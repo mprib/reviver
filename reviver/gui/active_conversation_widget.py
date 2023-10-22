@@ -26,13 +26,16 @@ class ActiveBotComboBox(QComboBox):
     def __init__(self, controller:Controller):
         super().__init__()
         self.controller = controller
-        self.currentTextChanged.connect(self.controller.set_active_bot)
+        self.connect_widgets()
         self.update()
 
     def connect_widgets(self):
-        self.controller.bots_updated.connect(self.update)     
+        self.currentTextChanged.connect(self.controller.set_active_bot)
+        self.controller.bot_added.connect(self.update)     
+        self.controller.bots_reordered.connect(self.update)
 
     def update(self):
+        log.info(f"Updating bot combo box...")
         self.clear()
         for bot_name in self.controller.get_ranked_bot_names():
             self.addItem(bot_name)

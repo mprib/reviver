@@ -31,6 +31,8 @@ class Controller(QObject):
     refresh_active_conversation = Signal()
     new_active_conversation = Signal()
     bots_updated = Signal()
+    bot_added = Signal()
+    bots_reordered = Signal()
 
 
     def __init__(self, data_directory: Path) -> None:
@@ -40,9 +42,7 @@ class Controller(QObject):
 
         # load archive if it exists; otherwise creates it
         self.archive = Archive(self.data_directory)
-
         self.bot_manager = self.archive.get_bot_manager()
-        # 
         self.convo_manager = self.archive.get_conversation_manager(self.bot_manager)
 
         # load API key if it's available and use it to set the spec sheet
@@ -78,6 +78,7 @@ class Controller(QObject):
             # pass in message added signal
             self.convo_manager.active_conversation.update_system_prompt() 
             self.refresh_active_conversation.emit()
+            log.info(f"Signalling bots updated after setting active bot to {bot_name}")
             self.bots_updated.emit()
             self.store_active_conversation()
 
@@ -86,7 +87,8 @@ class Controller(QObject):
         boolean return communicates if add was successful
         """
         success = self.bot_manager.create_new_bot(bot_name)
-        self.bots_updated.emit()
+        log.info(f"About to signal update of bots after creating new bot: {bot_name}")
+        self.bot_added.emit()
         self.archive.store_bot_manager(self.bot_manager)
         return success
 
@@ -101,6 +103,7 @@ class Controller(QObject):
             bot = self.bot_manager.get_bot(new_name)
             # note: important to rename bot archive prior to storing it...
             self.archive.rename_bot(old_name, new_name)
+            log.info(f"Updating {old_name} to {new_name} and signalling bots updated.")
             self.bots_updated.emit()
             self.archive.store_bot(bot)
             
@@ -144,7 +147,7 @@ class Controller(QObject):
     def move_bot(self, old_rank, new_rank):
         self.bot_manager.move_bot(old_rank, new_rank)
         self.archive.store_bot_manager(self.bot_manager)
-        self.bots_updated.emit()
+        self.bots_reordered.emit()
 
     def get_ranked_bot_names(self):
         log.info("Getting bots by rank")
