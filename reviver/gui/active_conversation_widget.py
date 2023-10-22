@@ -33,6 +33,7 @@ class ActiveBotComboBox(QComboBox):
         self.currentTextChanged.connect(self.controller.set_active_convo_bot)
         self.controller.bot_added.connect(self.update)     
         self.controller.bots_reordered.connect(self.update)
+        self.controller.bot_renamed.connect(self.update)
 
     def update(self):
         log.info(f"Updating bot combo box...")
@@ -85,7 +86,7 @@ class ActiveConversationWidget(QWidget):
         self.controller.message_updated.connect(self.update_message)
         self.controller.refresh_active_conversation.connect(self.display_active_conversation)
         self.controller.new_active_conversation.connect(self.display_active_conversation)
-        self.controller.bots_updated.connect(self.display_active_conversation)
+        self.controller.bot_updated.connect(self.display_active_conversation)
     
     def launch_bot_manager(self):
         self.bot_manager = BotGalleryWidget(self.controller)
