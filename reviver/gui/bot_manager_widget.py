@@ -20,7 +20,7 @@ class DraggableListWidget(QListWidget):
         super().__init__(parent)
         self.setDragDropMode(QListWidget.InternalMove)
         self.controller = controller
-
+        
     def dropEvent(self, event):
         if event.source() == self:
             source_index = self.currentRow()
@@ -47,6 +47,17 @@ class BotGalleryWidget(QListWidget):
         self.place_widgets()
         self.connect_widgets()
 
+        # make sure that you select the appropriate bot        
+        self.select_bot_by_name(self.controller.get_selected_bot_name()) 
+        self.update_bot_widget()
+
+    def select_bot_by_name(self, bot_name):
+        # Find items with matching text
+        matching_items = self.list_widget.findItems(bot_name, Qt.MatchFlag.MatchExactly)
+        # Select all matching items
+        for item in matching_items:
+            item.setSelected(True)
+
     def place_widgets(self):
         self.setLayout(QHBoxLayout())
         self.left_half = QVBoxLayout()
@@ -66,8 +77,7 @@ class BotGalleryWidget(QListWidget):
         self.add_button.clicked.connect(self.add_bot)
         self.remove_button.clicked.connect(self.remove_bot)
         self.rename_button.clicked.connect(self.rename_bot)
-        self.list_widget.currentItemChanged.connect(self.update_bot_widget)
-        # self.bot_widget.save_button.clicked.connect(self.load_bots)
+        self.list_widget.currentItemChanged.connect(self.update_selected_bot)
 
     def rename_bot(self):
         old_name = self.list_widget.currentItem().text()
@@ -123,14 +133,15 @@ class BotGalleryWidget(QListWidget):
             self.controller.remove_bot(item.text())
             self.load_bots()
 
-    def update_bot_widget(self, item):
-        if item is not None:
-            bot_name = item.text()
-            log.info(f"Updating bot widget to display {bot_name}")
-            # bot = self.gallery.bots[item.text()]
-            # if bot:
-            self.bot_widget.display_bot(bot_name)
-
+    def update_selected_bot(self, item):
+        self.controller.set_selected_bot(item.text())
+        self.update_bot_widget()
+        
+    def update_bot_widget(self):
+        bot_name = self.controller.get_selected_bot_name()
+        log.info(f"Updating bot widget to display {bot_name}")
+        self.bot_widget.display_bot(bot_name)
+            
 
 if __name__ == "__main__":
     from reviver.controller import Controller

@@ -30,7 +30,8 @@ class Controller(QObject):
     message_complete = Signal()
     refresh_active_conversation = Signal()
     new_active_conversation = Signal()
-    bots_updated = Signal()
+    bot_updated = Signal()
+    bot_renamed = Signal()
     bot_added = Signal()
     bots_reordered = Signal()
 
@@ -67,19 +68,20 @@ class Controller(QObject):
         self.message_complete.connect(self.store_active_conversation)
         self.message_added.connect(self.store_active_conversation)
 
-    def set_active_bot(self, bot_name):
+    def set_active_convo_bot(self, bot_name):
         if bot_name:
             log.info(f"Setting active bot to {bot_name}")
-            self.active_bot_name = bot_name
-            bot = self.bot_manager.get_bot(self.active_bot_name)
+            # self.active_bot_name = bot_name
+            bot = self.bot_manager.get_bot(bot_name)
             # if self.convo_manager.active_conversation is not None:
             self.convo_manager.active_conversation.bot = bot
+            self.set_selected_bot(bot_name)
         
             # pass in message added signal
             self.convo_manager.active_conversation.update_system_prompt() 
             self.refresh_active_conversation.emit()
             log.info(f"Signalling bots updated after setting active bot to {bot_name}")
-            self.bots_updated.emit()
+            self.bot_updated.emit()
             self.store_active_conversation()
 
     def add_bot(self, bot_name: str) -> bool:
@@ -93,8 +95,12 @@ class Controller(QObject):
         return success
 
     def remove_bot(self, bot_name: str):
+        """
+        Note that this does not currently address issues with the conversation having a deleted bot
+        """
         self.bot_manager.remove_bot(bot_name)
         self.bot_manager.rerank_bots()
+        self.bot_manager.selected_bot = self.bot_manager.get_bot_by_rank(1)
         self.archive.remove_bot(bot_name)
 
     def rename_bot(self, old_name, new_name) -> bool:
@@ -104,7 +110,7 @@ class Controller(QObject):
             # note: important to rename bot archive prior to storing it...
             self.archive.rename_bot(old_name, new_name)
             log.info(f"Updating {old_name} to {new_name} and signalling bots updated.")
-            self.bots_updated.emit()
+            self.bot_renamed.emit()
             self.archive.store_bot(bot)
             
         return success
@@ -118,6 +124,16 @@ class Controller(QObject):
             return asdict(bot)
         else:
             return None
+
+    def set_selected_bot(self,bot_name):
+        bot = self.bot_manager.get_bot(bot_name)
+        self.bot_manager.selected_bot = bot
+        
+    def get_selected_bot_name(self):
+        """
+        If not bots yet, then this will be None
+        """
+        return self.bot_manager.selected_bot.name
 
     def update_bot(self, bot_name: str, **kwargs):
         """
@@ -138,7 +154,7 @@ class Controller(QObject):
             if self.convo_manager.active_conversation is not None:
                 self.convo_manager.active_conversation.update_system_prompt() 
 
-            self.bots_updated.emit()
+            self.bot_updated.emit()
             self.archive.store_bot(bot)
         else:
             log.warning(f"No bot by name of {bot_name}")
@@ -163,7 +179,7 @@ class Controller(QObject):
     def start_conversation(self, bot_name: str):
         """ """
         bot = self.bot_manager.get_bot(bot_name)
-        self.active_bot_name = bot_name
+        # self.active_bot_name = bot_name
         self.convo_manager.new_active_conversation(bot)
         self.archive.store_conversation(self.convo_manager.active_conversation)
         self.new_active_conversation.emit()

@@ -21,10 +21,19 @@ class Bot:
 @dataclass
 class BotManager:
     bots: dict = field(default_factory=dict[str, Bot])
+    selected_bot: Bot = None
 
+    def __post_init__(self):
+        # ensure there is a se
+        if self.bots:
+            self.rerank_bots()  # safety rerank in case bot tomls got deleted
+            self.selected_bot = self.get_bot_by_rank(1)
+
+            
     def create_new_bot(self, name: str, model: str = None) -> bool:
         if name not in self.bots.keys():
             bot = Bot(name, model, rank=1) # new bot always at top
+            self.selected_bot = bot  # newly created bot is in focus
 
             # push all other bots down in rank
             for name, bt in self.bots.items():
